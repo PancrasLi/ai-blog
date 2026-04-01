@@ -1,13 +1,7 @@
-import { posts } from '@/.velite';
-import { PostCard } from '@/components/post-card';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
-  const publishedPosts = posts
-    .filter((post) => post.published)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
   return (
     <div className="container mx-auto px-4 py-12">
       {/* Hero Section */}
@@ -19,10 +13,10 @@ export default function Home() {
           探索人工智能、技术前沿和创新思想。这是一个现代化的无服务博客系统，由 Next.js、Tailwind CSS 和 Shadcn/UI 驱动。
         </p>
         <div className="flex gap-4 justify-center">
-          <Button size="lg" asChild>
+          <Button asChild>
             <Link href="#posts">查看文章</Link>
           </Button>
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="outline" asChild>
             <Link href="/about">了解更多</Link>
           </Button>
         </div>
@@ -31,13 +25,11 @@ export default function Home() {
       {/* Stats Section */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12 border-y">
         <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600">{publishedPosts.length}</div>
+          <div className="text-3xl font-bold text-blue-600">∞</div>
           <p className="text-muted-foreground">篇文章</p>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-purple-600">
-            {new Set(publishedPosts.flatMap((p) => p.tags || [])).size}
-          </div>
+          <div className="text-3xl font-bold text-purple-600">∞</div>
           <p className="text-muted-foreground">个标签</p>
         </div>
         <div className="text-center">
@@ -46,21 +38,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Posts Section */}
+      {/* Content Section */}
       <section id="posts" className="py-12">
-        <h2 className="text-3xl font-bold mb-8">最新文章</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {publishedPosts.slice(0, 6).map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+        <h2 className="text-3xl font-bold mb-8">最新内容</h2>
+        <div className="bg-card rounded-lg border p-8 text-center">
+          <p className="text-muted-foreground">文章将在此显示</p>
         </div>
-        {publishedPosts.length > 6 && (
-          <div className="mt-8 text-center">
-            <Button variant="outline" asChild>
-              <Link href="/blog">查看所有文章</Link>
-            </Button>
-          </div>
-        )}
       </section>
     </div>
   );
