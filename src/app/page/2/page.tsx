@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, Calendar, Tag } from 'lucide-react';
+import { Calendar, Tag } from 'lucide-react';
 import { getPosts } from '@/lib/posts';
 import { formatDate } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
-const POSTS_PER_PAGE = 8;
+const POSTS_PER_PAGE = 12;
 
 export default function Page2() {
   const allPosts = getPosts();
@@ -25,58 +25,43 @@ export default function Page2() {
   const paginatedPosts = sortedPosts.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-12">
-      <section className="py-16 sm:py-24">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-6xl sm:text-7xl font-bold tracking-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
-                inig
-              </span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl">
-              AI 学习平台。记录想法、探索技术、分享见解。
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Button size="lg" asChild>
-              <Link href="/">
-                回到首页
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+    <div className="space-y-0">
+      {/* Simple header with back link */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="flex items-center gap-4 mb-8">
+            <Button variant="outline" asChild>
+              <Link href="/">← 返回首页</Link>
             </Button>
+            <h1 className="text-4xl font-bold">最新文章</h1>
           </div>
+          <p className="text-muted-foreground text-lg">
+            {sortedPosts.length} 篇 • 第 {currentPage} / {Math.max(1, totalPages)} 页
+          </p>
         </div>
       </section>
 
       <Separator />
 
-      <section className="py-12 space-y-8">
-        <div className="space-y-2">
-          <h2 className="text-4xl font-bold">最新文章</h2>
-          <p className="text-muted-foreground">
-            {sortedPosts.length} 篇 • 第 {currentPage} / {Math.max(1, totalPages)} 页
-          </p>
-        </div>
-
+      {/* Articles Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
         {paginatedPosts.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {paginatedPosts.map((post) => (
               <Link key={post.slug} href={`/posts/${post.slug}`}>
-                <Card className="hover:bg-accent transition-colors cursor-pointer">
-                  <CardContent className="py-4">
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg line-clamp-1 hover:text-blue-600 transition-colors">
-                            {post.metadata.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-                            {post.metadata.summary || '暂无摘要'}
-                          </p>
-                        </div>
+                <Card className="hover:shadow-lg hover:border-blue-500/50 transition-all duration-200 cursor-pointer h-full">
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-lg line-clamp-2 hover:text-blue-600 transition-colors mb-2">
+                          {post.metadata.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {post.metadata.summary || '暂无摘要'}
+                        </p>
                       </div>
+
+                      <Separator className="my-3" />
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -89,14 +74,16 @@ export default function Page2() {
                         {post.metadata.tags.length > 0 && (
                           <div className="flex items-center gap-2">
                             <Tag className="h-3.5 w-3.5" />
-                            <div className="flex gap-1.5">
+                            <div className="flex gap-1.5 flex-wrap">
                               {post.metadata.tags.slice(0, 2).map((tag) => (
                                 <Badge key={tag} variant="secondary" className="text-xs py-0 px-1.5">
                                   {tag}
                                 </Badge>
                               ))}
                               {post.metadata.tags.length > 2 && (
-                                <span className="text-xs">+{post.metadata.tags.length - 2}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  +{post.metadata.tags.length - 2}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -118,7 +105,7 @@ export default function Page2() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-8 flex-wrap">
+          <div className="flex items-center justify-center gap-2 pt-12 flex-wrap">
             <Button variant="outline" size="sm" asChild>
               <Link href="/">上一页</Link>
             </Button>
