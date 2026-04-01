@@ -1,61 +1,94 @@
+'use client';
+
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/50">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <h3 className="font-semibold mb-4">AI Blog</h3>
-            <p className="text-muted-foreground">
-              一个现代化的无服务博客系统，由 Next.js 和 Shadcn/UI 驱动。
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">导航</h4>
-            <ul className="space-y-2 text-muted-foreground">
+    <footer className="border-t bg-background py-12">
+      <div className="container mx-auto px-4 space-y-8">
+        {/* Main Content */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">关于</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/" className="hover:text-foreground transition-colors">
-                  首页
+                <Link href="#about" className="hover:text-foreground transition-colors">
+                  博客介绍
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="hover:text-foreground transition-colors">
-                  博客
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-foreground transition-colors">
-                  关于
+                <Link href="#articles" className="hover:text-foreground transition-colors">
+                  最新文章
                 </Link>
               </li>
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">社交</h4>
-            <ul className="space-y-2 text-muted-foreground">
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">资源</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-                  GitHub
-                </a>
+                <Link href="https://nextjs.org" target="_blank" className="hover:text-foreground transition-colors">
+                  Next.js
+                </Link>
               </li>
               <li>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                <Link href="https://tailwindcss.com" target="_blank" className="hover:text-foreground transition-colors">
+                  Tailwind CSS
+                </Link>
+              </li>
+              <li>
+                <Link href="https://ui.shadcn.com" target="_blank" className="hover:text-foreground transition-colors">
+                  Shadcn/UI
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">文档</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link href="https://github.com/PancrasLi/ai-blog" target="_blank" className="hover:text-foreground transition-colors">
+                  GitHub
+                </Link>
+              </li>
+              <li>
+                <Link href="https://github.com/PancrasLi/ai-blog/blob/main/PUBLISHING_RULES.md" target="_blank" className="hover:text-foreground transition-colors">
+                  发布规则
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">社交</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link href="https://github.com" target="_blank" className="hover:text-foreground transition-colors">
+                  GitHub
+                </Link>
+              </li>
+              <li>
+                <Link href="https://twitter.com" target="_blank" className="hover:text-foreground transition-colors">
                   Twitter
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <Separator className="my-8" />
+        <Separator />
 
-        <div className="flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-          <p>&copy; 2024 AI Blog. 保留所有权利。</p>
-          <p>构建于 Next.js • Tailwind CSS • Shadcn/UI</p>
+        {/* Bottom Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-muted-foreground">
+            © 2026 AI Blog. 所有权利保留。
+          </div>
+          <div className="text-xs text-muted-foreground">
+            由 Next.js • Tailwind CSS • Shadcn/UI 驱动
+          </div>
         </div>
       </div>
     </footer>
