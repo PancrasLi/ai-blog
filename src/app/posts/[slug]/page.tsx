@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-// MDX 组件 - 增强版支持更多元素
+// MDX 组件 - 增强版支持更多元素（包括优化的表格）
 const mdxComponents = {
   // 标题
   h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-4 text-foreground" {...props} />,
@@ -91,26 +91,32 @@ const mdxComponents = {
     <blockquote className="border-l-4 border-blue-600 pl-4 italic my-4 text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 py-2 rounded" {...props} />
   ),
   
-  // 表格 - 完整支持
+  // 表格 - 完整支持和优化
   table: ({ ...props }: any) => (
-    <div className="overflow-x-auto mb-4 rounded border border-gray-300 dark:border-gray-700">
-      <table className="w-full border-collapse" {...props} />
+    <div className="overflow-x-auto mb-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+      <table className="w-full border-collapse text-sm" {...props} />
     </div>
   ),
   thead: ({ ...props }: any) => (
-    <thead className="bg-gray-100 dark:bg-gray-900" {...props} />
+    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b-2 border-gray-300 dark:border-gray-600" {...props} />
   ),
   tbody: ({ ...props }: any) => (
-    <tbody className="divide-y divide-gray-300 dark:divide-gray-700" {...props} />
+    <tbody className="divide-y divide-gray-200 dark:divide-gray-700" {...props} />
   ),
   tr: ({ ...props }: any) => (
-    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" {...props} />
+    <tr className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" {...props} />
   ),
   th: ({ ...props }: any) => (
-    <th className="border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 p-3 text-left font-semibold text-foreground" {...props} />
+    <th 
+      className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left font-semibold text-foreground bg-inherit"
+      {...props}
+    />
   ),
   td: ({ ...props }: any) => (
-    <td className="border border-gray-300 dark:border-gray-700 p-3 text-foreground" {...props} />
+    <td 
+      className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-foreground whitespace-normal"
+      {...props}
+    />
   ),
   
   // 水平线
