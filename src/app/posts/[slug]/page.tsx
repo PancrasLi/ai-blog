@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { MDXRemote } from 'next-mdx-remote/rsc';
+import { compile } from '@mdx-js/mdx';
+import remarkGfm from 'remark-gfm';
 import { getPostBySlug, getSlugs } from '@/lib/posts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +47,7 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-// MDX 组件 - 增强版支持更多元素（包括优化的表格）
+// 完整的 MDX 组件配置 - 包括表格和所有元素
 const mdxComponents = {
   // 标题
   h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-4 text-foreground" {...props} />,
@@ -71,70 +73,81 @@ const mdxComponents = {
   ),
   
   // 代码
-  code: ({ ...props }: any) => (
-    <code
-      className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 rounded px-2 py-1 text-sm font-mono"
-      {...props}
-    />
-  ),
+  code: ({ inline, ...props }: any) => {
+    if (inline) {
+      return (
+        <code
+          className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-0.5 text-sm font-mono"
+          {...props}
+        />
+      );
+    }
+    return <code {...props} />;
+  },
   pre: ({ ...props }: any) => (
     <pre className="bg-gray-900 dark:bg-gray-800 text-gray-100 dark:text-gray-100 rounded-lg p-4 mb-4 overflow-x-auto border border-gray-700" {...props} />
   ),
   
   // 列表
-  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2 text-foreground" {...props} />,
-  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-2 text-foreground" {...props} />,
-  li: ({ ...props }: any) => <li className="ml-4 text-foreground" {...props} />,
+  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2 text-foreground ml-2" {...props} />,
+  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-2 text-foreground ml-2" {...props} />,
+  li: ({ ...props }: any) => <li className="text-foreground" {...props} />,
   
   // 引用
   blockquote: ({ ...props }: any) => (
     <blockquote className="border-l-4 border-blue-600 pl-4 italic my-4 text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 py-2 rounded" {...props} />
   ),
   
-  // 表格 - 完整支持和优化
-  table: ({ ...props }: any) => (
-    <div className="overflow-x-auto mb-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-      <table className="w-full border-collapse text-sm" {...props} />
+  // 表格 - 完整支持（关键修复）
+  table: ({ children, ...props }: any) => (
+    <div className="overflow-x-auto mb-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <table className="w-full text-sm border-collapse" {...props}>
+        {children}
+      </table>
     </div>
   ),
-  thead: ({ ...props }: any) => (
-    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b-2 border-gray-300 dark:border-gray-600" {...props} />
+  
+  thead: ({ children, ...props }: any) => (
+    <thead className="bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600" {...props}>
+      {children}
+    </thead>
   ),
-  tbody: ({ ...props }: any) => (
-    <tbody className="divide-y divide-gray-200 dark:divide-gray-700" {...props} />
+  
+  tbody: ({ children, ...props }: any) => (
+    <tbody className="divide-y divide-gray-200 dark:divide-gray-700" {...props}>
+      {children}
+    </tbody>
   ),
-  tr: ({ ...props }: any) => (
-    <tr className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" {...props} />
+  
+  tr: ({ children, ...props }: any) => (
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" {...props}>
+      {children}
+    </tr>
   ),
+  
   th: ({ ...props }: any) => (
-    <th 
-      className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left font-semibold text-foreground bg-inherit"
+    <th
+      className="border border-gray-200 dark:border-gray-600 px-4 py-3 text-left font-semibold text-foreground"
       {...props}
     />
   ),
+  
   td: ({ ...props }: any) => (
-    <td 
-      className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-foreground whitespace-normal"
+    <td
+      className="border border-gray-200 dark:border-gray-600 px-4 py-3 text-foreground"
       {...props}
     />
   ),
   
   // 水平线
   hr: ({ ...props }: any) => <hr className="my-6 border-gray-300 dark:border-gray-700" {...props} />,
-  
-  // 列表项中的段落
-  div: ({ ...props }: any) => <div {...props} />,
-  span: ({ ...props }: any) => <span {...props} />,
 };
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
-  console.log('[PostPage] Received slug:', slug);
   const post = getPostBySlug(slug);
-  console.log('[PostPage] Got post:', post ? 'yes' : 'no');
 
   if (!post) {
-    console.error('[PostPage] Post not found for slug:', slug);
     notFound();
   }
 
@@ -193,7 +206,15 @@ export default async function PostPage({ params }: Props) {
       {/* Article Content */}
       <article className="max-w-none space-y-6">
         <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-          <MDXRemote source={post.content} components={mdxComponents} />
+          <MDXRemote
+            source={post.content}
+            components={mdxComponents}
+            options={{
+              mdxOptions: {
+                remarkPlugins: [remarkGfm],
+              },
+            }}
+          />
         </div>
       </article>
 
