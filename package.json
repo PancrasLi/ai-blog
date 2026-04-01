@@ -32,7 +32,7 @@
     "class-variance-authority": "latest",
     "autoprefixer": "latest",
     "postcss": "latest",
-    "tailwindcss": "latest",
+    "tailwindcss": "^3.4.1",
     "eslint": "latest",
     "eslint-config-next": "latest",
     "prettier": "latest",
