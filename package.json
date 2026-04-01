@@ -11,7 +11,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
     "deploy": "npm run build && git add out/ && git commit -m 'chore: deploy to gh-pages' && git push origin main",
-    "daily-publish": "node scripts/generate-daily-article.js"
+    "daily-publish": "node scripts/generate-daily-article.js",
+    "daily-surf": "node scripts/daily-surf.js"
   },
   "dependencies": {
     "react": "latest",
