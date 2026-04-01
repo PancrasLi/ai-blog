@@ -76,22 +76,22 @@ export default function Home() {
           </div>
 
           {paginatedPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {paginatedPosts.map((post) => (
                 <Link key={post.slug} href={`/posts/${post.slug}`}>
-                  <Card className="hover:shadow-lg hover:border-blue-500/50 transition-all duration-200 cursor-pointer h-full">
-                    <CardContent className="p-6">
-                      <div className="space-y-3">
+                  <Card className="hover:shadow-lg hover:border-blue-500/50 transition-all duration-200 cursor-pointer h-full hover:-translate-y-1">
+                    <CardContent className="p-8">
+                      <div className="space-y-4">
                         <div>
-                          <h3 className="font-semibold text-lg line-clamp-2 hover:text-blue-600 transition-colors mb-2">
+                          <h3 className="font-semibold text-lg line-clamp-2 hover:text-blue-600 transition-colors mb-3">
                             {post.metadata.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                             {post.metadata.summary || '暂无摘要'}
                           </p>
                         </div>
 
-                        <Separator className="my-3" />
+                        <Separator className="my-4" />
 
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">

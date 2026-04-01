@@ -49,16 +49,16 @@ export async function generateMetadata({ params }: Props) {
 
 // 完整的 MDX 组件配置 - 包括表格和所有元素
 const mdxComponents = {
-  // 标题
-  h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-4 text-foreground" {...props} />,
-  h2: ({ ...props }: any) => <h2 className="text-3xl font-bold mt-6 mb-3 text-foreground border-b pb-2" {...props} />,
-  h3: ({ ...props }: any) => <h3 className="text-2xl font-bold mt-4 mb-2 text-foreground" {...props} />,
-  h4: ({ ...props }: any) => <h4 className="text-xl font-semibold mt-3 mb-2" {...props} />,
-  h5: ({ ...props }: any) => <h5 className="text-lg font-semibold mt-2 mb-1" {...props} />,
-  h6: ({ ...props }: any) => <h6 className="text-base font-semibold" {...props} />,
+  // 标题 - 优化间距和视觉层次
+  h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-6 text-foreground" {...props} />,
+  h2: ({ ...props }: any) => <h2 className="text-3xl font-bold mt-8 mb-4 text-foreground border-b pb-3" {...props} />,
+  h3: ({ ...props }: any) => <h3 className="text-2xl font-bold mt-6 mb-3 text-foreground" {...props} />,
+  h4: ({ ...props }: any) => <h4 className="text-xl font-semibold mt-4 mb-2" {...props} />,
+  h5: ({ ...props }: any) => <h5 className="text-lg font-semibold mt-3 mb-2" {...props} />,
+  h6: ({ ...props }: any) => <h6 className="text-base font-semibold mt-3 mb-2" {...props} />,
   
-  // 段落和文本
-  p: ({ ...props }: any) => <p className="text-base leading-7 mb-4 text-foreground" {...props} />,
+  // 段落和文本 - 优化可读性
+  p: ({ ...props }: any) => <p className="text-base leading-8 mb-6 text-foreground" {...props} />,
   strong: ({ ...props }: any) => <strong className="font-bold text-foreground" {...props} />,
   em: ({ ...props }: any) => <em className="italic text-foreground" {...props} />,
   
@@ -85,13 +85,13 @@ const mdxComponents = {
     return <code {...props} />;
   },
   pre: ({ ...props }: any) => (
-    <pre className="bg-gray-900 dark:bg-gray-800 text-gray-100 dark:text-gray-100 rounded-lg p-4 mb-4 overflow-x-auto border border-gray-700" {...props} />
+    <pre className="bg-gray-900 dark:bg-gray-800 text-gray-100 dark:text-gray-100 rounded-lg p-6 mb-8 mt-2 overflow-x-auto border border-gray-700" {...props} />
   ),
   
-  // 列表
-  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2 text-foreground ml-2" {...props} />,
-  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-2 text-foreground ml-2" {...props} />,
-  li: ({ ...props }: any) => <li className="text-foreground" {...props} />,
+  // 列表 - 优化间距
+  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-6 space-y-3 text-foreground ml-4" {...props} />,
+  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-6 space-y-3 text-foreground ml-4" {...props} />,
+  li: ({ ...props }: any) => <li className="text-foreground leading-8" {...props} />,
   
   // 引用
   blockquote: ({ ...props }: any) => (
@@ -203,8 +203,8 @@ export default async function PostPage({ params }: Props) {
         </div>
       )}
 
-      {/* Article Content */}
-      <article className="max-w-none space-y-6">
+      {/* Article Content - Optimized for Readability */}
+      <article className="max-w-3xl mx-auto space-y-6">
         <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
           <MDXRemote
             source={post.content}
