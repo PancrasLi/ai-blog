@@ -14,7 +14,7 @@ export function Navbar() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
             <Code2 className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg hidden sm:inline">AI Blog</span>
+          <span className="font-bold text-lg hidden sm:inline">inig.ai</span>
         </Link>
 
         <div className="flex items-center gap-4">

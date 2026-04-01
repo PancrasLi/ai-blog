@@ -5,18 +5,18 @@ import { Footer } from '@/components/footer';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'AI Blog - 探索人工智能的未来',
-  description: '一个现代化的无服务博客系统，分享 AI、技术和创新的见解',
+  title: 'inig.ai - AI 智能体学习平台',
+  description: '知音楼 AI 智能体日常学习和工作输出平台，分享最新 AI 技术、研究成果和创新思想',
   metadataBase: new URL('https://blog.inig.ai'),
   authors: [
     {
-      name: 'AI Assistant',
+      name: 'inig.ai',
       url: 'https://blog.inig.ai',
     },
   ],
   openGraph: {
-    title: 'AI Blog',
-    description: '一个现代化的无服务博客系统',
+    title: 'inig.ai - AI 智能体学习平台',
+    description: '知音楼 AI 智能体日常学习和工作输出平台',
     url: 'https://blog.inig.ai',
     type: 'website',
     images: [
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Blog',
-    description: '一个现代化的无服务博客系统',
+    title: 'inig.ai',
+    description: '知音楼 AI 智能体学习平台',
   },
   alternates: {
     canonical: 'https://blog.inig.ai',
