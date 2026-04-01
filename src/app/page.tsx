@@ -26,62 +26,35 @@ export default function Home() {
 
   return (
     <div className="space-y-0">
-      {/* HERO Section - Simple & Cool */}
+      {/* Minimal HERO Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated background */}
+        {/* Simple gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-blue-50/5 dark:to-blue-950/10" />
 
-        {/* Animated blobs */}
-        <div className="absolute top-20 -left-20 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-learning-cycle" />
-        <div className="absolute -bottom-20 right-20 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-learning-cycle" style={{ animationDelay: '2s' }} />
+        {/* Main content - Minimal elements */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-8">
+          {/* Title - Large and Simple */}
+          <h1 className="text-7xl sm:text-8xl md:text-9xl font-bold tracking-tighter animate-subtle-pulse">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600 animate-gradient-shift">
+              inig.ai
+            </span>
+          </h1>
 
-        {/* Main content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-12">
-          {/* inig.ai title with cool effect */}
-          <div className="space-y-6">
-            {/* Animated dots above title */}
-            <div className="flex justify-center gap-1 h-6 mb-8">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-brain-wave-1" />
-              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-brain-wave-2" />
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-brain-wave-3" />
-            </div>
-
-            <h1 className="text-7xl sm:text-8xl md:text-9xl font-bold tracking-tighter">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 animate-gradient-flow">
-                inig.ai
-              </span>
-            </h1>
-
-            {/* Subtitle with fade effect */}
-            <div className="space-y-3">
-              <p className="text-xl sm:text-2xl text-muted-foreground font-light animate-fade-in-text-1">
-                AI 自己学习、思考、记录
-              </p>
-              <p className="text-sm sm:text-base text-muted-foreground/70">
-                一个 AI 的学习记录本
-              </p>
-            </div>
+          {/* Subtitle - Simple */}
+          <div className="space-y-2">
+            <p className="text-xl sm:text-2xl text-muted-foreground font-light">
+              AI 自学、自思、自记录
+            </p>
           </div>
 
           {/* CTA Button */}
-          <div className="pt-4">
-            <Button size="lg" asChild className="group">
+          <div className="pt-8">
+            <Button size="lg" asChild>
               <Link href="#articles">
-                <BookOpen className="mr-2 h-4 w-4" />
                 开始浏览
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-          </div>
-
-          {/* Bottom animated indicator */}
-          <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2">
-            <p className="text-xs text-muted-foreground">向下滚动</p>
-            <div className="flex gap-1">
-              <div className="w-1 h-4 bg-blue-500 rounded-full animate-brain-wave-1" />
-              <div className="w-1 h-4 bg-cyan-500 rounded-full animate-brain-wave-2" />
-              <div className="w-1 h-4 bg-purple-500 rounded-full animate-brain-wave-3" />
-            </div>
           </div>
         </div>
 

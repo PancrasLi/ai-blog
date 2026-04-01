@@ -73,159 +73,33 @@
   }
 }
 
-/* AI Self-Learning & Recording Animations */
+/* Minimal Animations - Simple & Clean */
 
-/* 文字逐个出现 - AI 自己记录思想 */
-@keyframes type-in {
-  0% {
-    width: 0;
-    opacity: 1;
-  }
-  100% {
-    width: 100%;
-    opacity: 1;
-  }
-}
-
-.animate-type-in {
-  animation: type-in 4s steps(40, end) infinite;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-/* 脑波脉冲 - AI 思维活跃 */
-@keyframes brain-wave {
+/* 极简脉冲 - 微妙的呼吸效果 */
+@keyframes subtle-pulse {
   0%, 100% {
-    opacity: 0.3;
-    transform: scaleY(1);
+    opacity: 1;
   }
   50% {
-    opacity: 1;
-    transform: scaleY(1.5);
+    opacity: 0.7;
   }
 }
 
-.animate-brain-wave {
-  animation: brain-wave 2s ease-in-out infinite;
+.animate-subtle-pulse {
+  animation: subtle-pulse 3s ease-in-out infinite;
 }
 
-.animate-brain-wave-1 {
-  animation: brain-wave 2s ease-in-out infinite;
-}
-
-.animate-brain-wave-2 {
-  animation: brain-wave 2s ease-in-out infinite 0.3s;
-}
-
-.animate-brain-wave-3 {
-  animation: brain-wave 2s ease-in-out infinite 0.6s;
-}
-
-.animate-brain-wave-4 {
-  animation: brain-wave 2s ease-in-out infinite 0.9s;
-}
-
-/* 知识点连接 - 学习网络形成 */
-@keyframes node-connect {
+/* 极简渐变流动 - 背景颜色缓慢变化 */
+@keyframes gradient-shift {
   0%, 100% {
-    opacity: 0;
-    transform: scale(0.5);
+    background-position: 0% 50%;
   }
   50% {
-    opacity: 1;
-    transform: scale(1);
+    background-position: 100% 50%;
   }
 }
 
-.animate-node-connect {
-  animation: node-connect 3s ease-in-out infinite;
-}
-
-.animate-node-connect-1 {
-  animation: node-connect 3s ease-in-out infinite;
-}
-
-.animate-node-connect-2 {
-  animation: node-connect 3s ease-in-out infinite 0.5s;
-}
-
-.animate-node-connect-3 {
-  animation: node-connect 3s ease-in-out infinite 1s;
-}
-
-.animate-node-connect-4 {
-  animation: node-connect 3s ease-in-out infinite 1.5s;
-}
-
-/* 笔记记录 - 从左到右记录内容 */
-@keyframes write-note {
-  0% {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-  }
-  100% {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 0;
-  }
-}
-
-.animate-write-note {
-  animation: write-note 6s ease-in-out infinite;
-}
-
-/* 光晕闪烁 - 灵感闪现 */
-@keyframes insight-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 20px rgba(59, 130, 246, 0);
-  }
-}
-
-.animate-insight-glow {
-  animation: insight-glow 3s ease-out infinite;
-}
-
-/* 文字淡入 - 学习内容呈现 */
-@keyframes fade-in-text {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  50%, 100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-text-1 {
-  animation: fade-in-text 6s ease-out infinite;
-}
-
-.animate-fade-in-text-2 {
-  animation: fade-in-text 6s ease-out infinite 2s;
-}
-
-.animate-fade-in-text-3 {
-  animation: fade-in-text 6s ease-out infinite 4s;
-}
-
-/* 循环学习 - 不断重复的学习过程 */
-@keyframes learning-cycle {
-  0% {
-    transform: rotate(0deg);
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: rotate(360deg);
-    opacity: 0.6;
-  }
-}
-
-.animate-learning-cycle {
-  animation: learning-cycle 8s linear infinite;
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease-in-out infinite;
 }
