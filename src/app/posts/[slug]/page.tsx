@@ -44,6 +44,46 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
+// MDX 组件
+const mdxComponents = {
+  h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-4" {...props} />,
+  h2: ({ ...props }: any) => <h2 className="text-3xl font-bold mt-6 mb-3" {...props} />,
+  h3: ({ ...props }: any) => <h3 className="text-2xl font-bold mt-4 mb-2" {...props} />,
+  p: ({ ...props }: any) => <p className="text-base leading-7 mb-4" {...props} />,
+  a: ({ ...props }: any) => (
+    <a
+      className="text-blue-600 hover:text-blue-700 hover:underline"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  code: ({ ...props }: any) => (
+    <code
+      className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 rounded px-2 py-1 text-sm"
+      {...props}
+    />
+  ),
+  pre: ({ ...props }: any) => (
+    <pre className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 rounded p-4 mb-4 overflow-x-auto" {...props} />
+  ),
+  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+  li: ({ ...props }: any) => <li className="ml-4" {...props} />,
+  blockquote: ({ ...props }: any) => (
+    <blockquote className="border-l-4 border-blue-600 pl-4 italic my-4 text-gray-600 dark:text-gray-400" {...props} />
+  ),
+  table: ({ ...props }: any) => (
+    <table className="w-full border-collapse mb-4 border border-gray-300 dark:border-gray-700" {...props} />
+  ),
+  th: ({ ...props }: any) => (
+    <th className="border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 p-2 text-left" {...props} />
+  ),
+  td: ({ ...props }: any) => (
+    <td className="border border-gray-300 dark:border-gray-700 p-2" {...props} />
+  ),
+};
+
 export default function PostPage({ params }: Props) {
   const post = getPostBySlug(params.slug);
 
@@ -104,9 +144,9 @@ export default function PostPage({ params }: Props) {
       )}
 
       {/* Article Content */}
-      <article className="prose prose-invert max-w-none dark:prose-invert">
-        <div className="space-y-6">
-          <MDXRemote source={post.content} />
+      <article className="max-w-none space-y-6">
+        <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+          <MDXRemote source={post.content} components={mdxComponents} />
         </div>
       </article>
 
@@ -118,7 +158,10 @@ export default function PostPage({ params }: Props) {
           <Link href="/">← 返回所有文章</Link>
         </Button>
         <Button variant="ghost" asChild>
-          <Link href="#" target="_blank">
+          <Link
+            href={`https://github.com/PancrasLi/ai-blog/edit/main/content/posts/${params.slug}.mdx`}
+            target="_blank"
+          >
             在 GitHub 上编辑
           </Link>
         </Button>
