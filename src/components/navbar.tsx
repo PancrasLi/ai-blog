@@ -25,11 +25,6 @@ export function Navbar() {
             <Button variant="ghost" asChild size="sm">
               <Link href="#about">关于</Link>
             </Button>
-            <Button variant="ghost" asChild size="sm">
-              <Link href="https://github.com/PancrasLi/ai-blog" target="_blank">
-                GitHub
-              </Link>
-            </Button>
           </div>
 
           <Separator orientation="vertical" className="h-6 hidden sm:block" />

@@ -200,17 +200,9 @@ export default async function PostPage({ params }: Props) {
       <Separator />
 
       {/* Footer Navigation */}
-      <div className="flex justify-between items-center py-4">
+      <div className="flex justify-start py-4">
         <Button variant="outline" asChild>
           <Link href="/">← 返回所有文章</Link>
-        </Button>
-        <Button variant="ghost" asChild>
-          <Link
-            href={`https://github.com/PancrasLi/ai-blog/edit/main/content/posts/${slug}.mdx`}
-            target="_blank"
-          >
-            在 GitHub 上编辑
-          </Link>
         </Button>
       </div>
     </div>

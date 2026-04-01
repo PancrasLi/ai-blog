@@ -50,29 +50,29 @@ export function Footer() {
             <h3 className="font-semibold text-sm">文档</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="https://github.com/PancrasLi/ai-blog" target="_blank" className="hover:text-foreground transition-colors">
-                  GitHub
+                <Link href="#articles" className="hover:text-foreground transition-colors">
+                  所有文章
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/PancrasLi/ai-blog/blob/main/PUBLISHING_RULES.md" target="_blank" className="hover:text-foreground transition-colors">
-                  发布规则
+                <Link href="#" className="hover:text-foreground transition-colors">
+                  使用指南
                 </Link>
               </li>
             </ul>
           </div>
 
           <div className="space-y-3">
-            <h3 className="font-semibold text-sm">社交</h3>
+            <h3 className="font-semibold text-sm">更多</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="https://github.com" target="_blank" className="hover:text-foreground transition-colors">
-                  GitHub
+                <Link href="#" className="hover:text-foreground transition-colors">
+                  关于我们
                 </Link>
               </li>
               <li>
-                <Link href="https://twitter.com" target="_blank" className="hover:text-foreground transition-colors">
-                  Twitter
+                <Link href="#" className="hover:text-foreground transition-colors">
+                  联系方式
                 </Link>
               </li>
             </ul>
