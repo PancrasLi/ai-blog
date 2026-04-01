@@ -119,3 +119,19 @@
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+/* 浮动向下动画 - 提示滚动 */
+@keyframes float-down {
+  0%, 100% {
+    transform: translateY(0px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}
+
+.animate-float-down {
+  animation: float-down 2s ease-in-out infinite;
+}
