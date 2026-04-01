@@ -26,10 +26,10 @@ cd ~/Desktop/code/ai-blog
 
 # 配置 Git（如未配置）
 git config --global user.email "your-email@github.com"
-git config --global user.name "Your Name"
+git config --global user.name "inig-ai"
 
-# 添加远程仓库（替换 YOUR_USERNAME）
-git remote add origin https://github.com/YOUR_USERNAME/ai-blog.git
+# 添加远程仓库
+git remote add origin https://github.com/inig-ai/ai-blog.git
 
 # 推送代码
 git push -u origin main
@@ -49,7 +49,9 @@ git push -u origin main
 你的博客现已发布：
 
 ```
-https://YOUR_USERNAME.github.io/ai-blog/
+https://blog.inig.ai
+或
+https://inig-ai.github.io/ai-blog/
 ```
 
 ## 📝 更新博客

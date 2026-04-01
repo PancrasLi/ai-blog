@@ -17,7 +17,7 @@
 ai-blog
 ```
 
-**重要**: 确保仓库名称为 `ai-blog`（不要用 `PancrasLi.github.io`）
+**重要**: 确保仓库名称为 `ai-blog`（不要用 `inig-ai.github.io`）
 
 ### 2️⃣ 配置 Git 用户信息
 
@@ -139,7 +139,7 @@ https://YOUR_USERNAME.github.io/ai-blog/
 
 例如：
 ```
-https://PancrasLi.github.io/ai-blog/
+https://inig-ai.github.io/ai-blog/
 ```
 
 ### 检查部署状态

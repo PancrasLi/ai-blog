@@ -10,7 +10,7 @@
 |----|-----|
 | **自定义域名** | blog.inig.ai |
 | **访问地址** | https://blog.inig.ai |
-| **GitHub 仓库** | https://github.com/PancrasLi/ai-blog |
+| **GitHub 仓库** | https://github.com/inig-ai/ai-blog |
 | **部署方式** | GitHub Pages + GitHub Actions |
 | **自动更新** | ✅ 启用 |
 
@@ -30,7 +30,7 @@
 
 ### DNS 配置
 - [ ] 域名提供商已配置 CNAME 记录
-- [ ] CNAME 指向 `PancrasLi.github.io`
+- [ ] CNAME 指向 `inig-ai.github.io`
 - [ ] DNS 已生效（可用 `nslookup blog.inig.ai` 验证）
 
 ### 项目文件
@@ -59,7 +59,7 @@ cat public/CNAME
 
 ```bash
 # 如果尚未添加远程仓库
-git remote add origin https://github.com/PancrasLi/ai-blog.git
+git remote add origin https://github.com/inig-ai/ai-blog.git
 
 # 验证远程
 git remote -v
@@ -72,7 +72,7 @@ git push -u origin main
 
 1. 访问 GitHub Actions
    ```
-   https://github.com/PancrasLi/ai-blog/actions
+   https://github.com/inig-ai/ai-blog/actions
    ```
 
 2. 查看 "Build and Deploy to GitHub Pages" 工作流
@@ -173,8 +173,8 @@ DNS 解析到 blog.inig.ai
 nslookup blog.inig.ai
 
 # 应该看到:
-# blog.inig.ai canonical name = PancrasLi.github.io.
-# PancrasLi.github.io canonical name = ...
+# blog.inig.ai canonical name = inig-ai.github.io.
+# inig-ai.github.io canonical name = ...
 # ... has address ...
 ```
 

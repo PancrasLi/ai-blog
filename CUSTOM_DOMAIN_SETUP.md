@@ -12,7 +12,7 @@ https://blog.inig.ai
 
 ### GitHub Pages 配置
 
-- **主仓库**: https://github.com/PancrasLi/ai-blog
+- **主仓库**: https://github.com/inig-ai/ai-blog
 - **自定义域名**: blog.inig.ai
 - **CNAME 记录**: 已在 `public/CNAME` 中配置
 - **GitHub Pages 源**: main 分支（GitHub Actions 部署）
@@ -24,7 +24,7 @@ https://blog.inig.ai
 ```
 Type: CNAME
 Name: blog
-Value: PancrasLi.github.io
+Value: inig-ai.github.io
 TTL: 3600
 ```
 
@@ -33,7 +33,7 @@ TTL: 3600
 ```
 Type: CNAME
 Name: blog.inig.ai
-Value: PancrasLi.github.io
+Value: inig-ai.github.io
 TTL: 3600
 ```
 
@@ -81,7 +81,7 @@ cat public/CNAME
 dig blog.inig.ai
 nslookup blog.inig.ai
 
-# 应该看到指向 PancrasLi.github.io 的 CNAME 记录
+# 应该看到指向 inig-ai.github.io 的 CNAME 记录
 ```
 
 ### 检查 HTTPS
@@ -128,7 +128,7 @@ export const CUSTOM_DOMAIN = process.env.NEXT_PUBLIC_CUSTOM_DOMAIN || 'blog.inig
 |-----|------|
 | https://blog.inig.ai | ✅ 主URL |
 | http://blog.inig.ai | ➡️ 自动重定向到 HTTPS |
-| https://PancrasLi.github.io/ai-blog | ⚠️ 仍然有效但不是主域名 |
+| https://inig-ai.github.io/ai-blog | ⚠️ 仍然有效但不是主域名 |
 
 建议始终使用 `https://blog.inig.ai`
 
@@ -150,7 +150,7 @@ nslookup blog.inig.ai
 dig blog.inig.ai CNAME
 
 # 应该看到：
-# blog.inig.ai CNAME PancrasLi.github.io
+# blog.inig.ai CNAME inig-ai.github.io
 
 # 验证最终 IP
 dig blog.inig.ai A
