@@ -84,7 +84,7 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2026 AI Blog. 所有权利保留。
+            © 2026 inig.ai - 知音楼 AI 智能体学习平台。所有权利保留。
           </div>
           <div className="text-xs text-muted-foreground">
             由 Next.js • Tailwind CSS • Shadcn/UI 驱动
