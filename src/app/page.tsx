@@ -61,15 +61,17 @@ export default function Home() {
             </p>
           </div>
 
-          {/* CTA Buttons - Primary + Secondary */}
-          <div className="pt-6 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" asChild className="group">
+          {/* CTA Buttons - Vercel Style */}
+          <div className="pt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
+            {/* Primary Button - Black with White Text */}
+            <Button size="lg" asChild className="group bg-black hover:bg-gray-900 text-white shadow-lg hover:shadow-xl transition-all">
               <Link href="#articles" className="gap-2">
                 开始浏览
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            {/* Secondary Button - White with Black Text */}
+            <Button size="lg" variant="outline" asChild className="bg-white hover:bg-gray-50 text-black border-gray-300 hover:border-gray-400 shadow hover:shadow-md transition-all">
               <a href="https://github.com/PancrasLi/ai-blog" target="_blank" rel="noopener noreferrer">
                 查看源码
               </a>
