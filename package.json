@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "export": "next build && next export",
+    "export": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "deploy": "npm run export && git add out/ && git commit -m 'chore: deploy to gh-pages' && git push origin main"
+    "deploy": "npm run build && git add out/ && git commit -m 'chore: deploy to gh-pages' && git push origin main"
   },
   "dependencies": {
     "react": "latest",
