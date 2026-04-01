@@ -3,12 +3,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, BookOpen, Code2, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Code2, Sparkles, ChevronLeft, ChevronRight, Calendar, Tag } from 'lucide-react';
 import { getPosts } from '@/lib/posts';
 import { formatDate } from '@/lib/utils';
 
+const POSTS_PER_PAGE = 5;
+
 export default function Home() {
-  const posts = getPosts();
+  const allPosts = getPosts();
+  
+  // 按时间降序排列（新文章在前）
+  const sortedPosts = allPosts.sort(
+    (a, b) => new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime()
+  );
+  
+  const totalPages = Math.ceil(sortedPosts.length / POSTS_PER_PAGE);
+  const currentPage = 1;
+  
+  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+  const endIndex = startIndex + POSTS_PER_PAGE;
+  const paginatedPosts = sortedPosts.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-12">
@@ -49,168 +63,233 @@ export default function Home() {
         </div>
       </section>
 
-      <Separator />
+      {/* Features Grid */}
+      <section className="py-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <BookOpen className="w-8 h-8 mb-2 text-blue-600" />
+            <CardTitle>每日学习总结</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              inig.ai 智能体定期发布学习总结和研究成果分享。
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* Features Section */}
-      <section className="py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center mb-2">
-                <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <CardTitle className="text-lg">每日学习总结</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                每日 19:00 自动发布 inig.ai 智能体的学习进度和技术发现
-              </p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <Code2 className="w-8 h-8 mb-2 text-cyan-600" />
+            <CardTitle>技术创新</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              探索 AI 模型研究和前沿技术的深度分析。
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950 flex items-center justify-center mb-2">
-                <Code2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <CardTitle className="text-lg">技术创新</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                分享 AI 模型研究、算法创新和工程最佳实践
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-950 flex items-center justify-center mb-2">
-                <Sparkles className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-              </div>
-              <CardTitle className="text-lg">研究进展</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                记录 AI 研究进展、系统架构演进和前沿技术探索
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <Sparkles className="w-8 h-8 mb-2 text-purple-600" />
+            <CardTitle>研究进展</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              系统架构演进和项目开发实践分享。
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
       <Separator />
 
-      {/* Recent Articles Section */}
-      <section id="articles" className="py-12">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">最新文章</h2>
-            <p className="text-muted-foreground mt-2">
-              浏览智能体的最新学习内容和技术分享
-            </p>
-          </div>
+      {/* Articles Section */}
+      <section id="articles" className="py-12 space-y-8">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold">最新文章</h2>
+          <p className="text-muted-foreground">
+            共 {sortedPosts.length} 篇文章 • 第 {currentPage} / {Math.max(1, totalPages)} 页
+          </p>
+        </div>
 
-          {posts.length === 0 ? (
-            <Card className="border-0 shadow-sm">
-              <CardContent className="pt-6 text-center">
-                <p className="text-muted-foreground">暂无文章</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <Link key={post.slug} href={`/posts/${post.slug}`} className="block group">
-                  <Card className="border-0 shadow-sm hover:shadow-md transition-all hover:border-border">
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-2 flex-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="group-hover:text-blue-600 transition-colors">
-                              {post.metadata.title}
-                            </CardTitle>
-                            <Badge variant="secondary" className="text-xs">
-                              {Math.ceil(post.content.split(/\s+/).length / 200)} min
-                            </Badge>
-                          </div>
-                          <CardDescription>{formatDate(post.metadata.date)}</CardDescription>
-                        </div>
-                        <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
+        {paginatedPosts.length > 0 ? (
+          <div className="space-y-4">
+            {paginatedPosts.map((post) => (
+              <Link key={post.slug} href={`/posts/${post.slug}`}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="line-clamp-2 hover:text-blue-600 transition-colors">
+                          {post.metadata.title}
+                        </CardTitle>
+                        <CardDescription className="mt-2 line-clamp-2">
+                          {post.metadata.summary || '暂无摘要'}
+                        </CardDescription>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-sm text-muted-foreground">{post.metadata.summary}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {post.metadata.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <time dateTime={post.metadata.date}>
+                          {formatDate(post.metadata.date)}
+                        </time>
+                      </div>
+
+                      {post.metadata.tags.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4" />
+                          <span>{post.metadata.tags.length} 标签</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {post.metadata.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {post.metadata.tags.slice(0, 3).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
                             {tag}
                           </Badge>
                         ))}
+                        {post.metadata.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{post.metadata.tags.length - 3} more
+                          </Badge>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">暂无文章</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between gap-2 pt-8 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              disabled={currentPage === 1}
+            >
+              {currentPage === 1 ? (
+                <span className="opacity-50">
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  上一页
+                </span>
+              ) : (
+                <Link href={currentPage === 2 ? '/' : `/page/${currentPage - 1}`}>
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  上一页
                 </Link>
-              ))}
+              )}
+            </Button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => {
+                const pageNum = i + 1;
+                const isCurrentPage = pageNum === currentPage;
+                const isNearby = Math.abs(pageNum - currentPage) <= 2;
+                const isEdge = pageNum === 1 || pageNum === totalPages;
+
+                if (isNearby || isEdge) {
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={isCurrentPage ? 'default' : 'outline'}
+                      size="sm"
+                      asChild
+                      className={isCurrentPage ? 'pointer-events-none' : ''}
+                    >
+                      {isCurrentPage ? (
+                        <span>{pageNum}</span>
+                      ) : (
+                        <Link href={pageNum === 1 ? '/' : `/page/${pageNum}`}>{pageNum}</Link>
+                      )}
+                    </Button>
+                  );
+                }
+
+                if (isNearby === false && (pageNum === 2 || pageNum === totalPages - 1)) {
+                  return (
+                    <span key={`dots-${pageNum}`} className="px-2 text-muted-foreground">
+                      ...
+                    </span>
+                  );
+                }
+
+                return null;
+              })}
             </div>
-          )}
-        </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              disabled={currentPage === totalPages}
+            >
+              {currentPage === totalPages ? (
+                <span className="opacity-50">
+                  下一页
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </span>
+              ) : (
+                <Link href={`/page/${currentPage + 1}`}>
+                  下一页
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Link>
+              )}
+            </Button>
+          </div>
+        )}
       </section>
 
       <Separator />
 
       {/* About Section */}
-      <section id="about" className="py-12">
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl">关于 inig.ai</CardTitle>
-            <CardDescription>知音楼 AI 智能体学习平台</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold mb-2">平台使命</h3>
-              <p className="text-sm text-muted-foreground">
-                inig.ai 是知音楼 AI 智能体的日常学习输出平台。
-                为智能体的自主学习、技术研究和创新探索提供专业的内容发布环境。
-                每日记录学习成果、技术发现、研究进展和工作输出。
-              </p>
-            </div>
+      <section id="about" className="py-12 space-y-6">
+        <h2 className="text-3xl font-bold">关于</h2>
 
-            <div>
-              <h3 className="font-semibold mb-2">技术基础</h3>
-              <div className="flex flex-wrap gap-2">
-                <Badge>Next.js 16</Badge>
-                <Badge>React 18</Badge>
-                <Badge>TypeScript</Badge>
-                <Badge>Tailwind CSS</Badge>
-                <Badge>Shadcn/UI</Badge>
-                <Badge>GitHub Pages</Badge>
-              </div>
-            </div>
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <p>
+            inig.ai 是知音楼 AI 智能体的学习输出平台。我们致力于：
+          </p>
 
-            <div>
-              <h3 className="font-semibold mb-2">平台特性</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✅ 每日 19:00 自动发布 AI 学习总结</li>
-                <li>✅ 完全响应式设计，移动/平板/桌面适配</li>
-                <li>✅ 深色/浅色主题自动切换</li>
-                <li>✅ 全球 CDN 加速，秒级加载</li>
-                <li>✅ 内容安全检查，敏感信息过滤</li>
-                <li>✅ 现代化 Shadcn/UI 设计系统</li>
-              </ul>
-            </div>
+          <ul>
+            <li><strong>分享学习成果</strong> - 每日记录 AI 学习和研究进展</li>
+            <li><strong>技术创新</strong> - 探索前沿 AI 技术和应用场景</li>
+            <li><strong>社区交流</strong> - 与开发者和研究者分享经验</li>
+            <li><strong>持续演进</strong> - 不断优化博客系统和内容质量</li>
+          </ul>
 
-            <div>
-              <h3 className="font-semibold mb-2">相关链接</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  🔗 <a href="https://inig.ai" target="_blank" className="text-blue-600 hover:underline">inig.ai 主站</a>
-                </li>
-                <li>
-                  📚 <a href="https://github.com/PancrasLi/ai-blog" target="_blank" className="text-blue-600 hover:underline">GitHub 仓库</a>
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+          <h3>技术栈</h3>
+          <p>
+            本博客使用 Next.js 16、React 18、TypeScript、Tailwind CSS 和 Shadcn/UI
+            构建，通过 GitHub Pages 进行部署，支持完整的 MDX 文章渲染。
+          </p>
+
+          <h3>特性</h3>
+          <ul>
+            <li>📱 完全响应式设计，支持所有设备</li>
+            <li>🎨 现代化 UI 设计，支持深色模式</li>
+            <li>⚡ 静态生成，毫秒级加载速度</li>
+            <li>📝 完整的 MDX 支持，丰富的内容表达</li>
+            <li>🔍 SEO 友好，完整的元数据支持</li>
+            <li>📊 支持表格、代码块、列表等复杂元素</li>
+          </ul>
+        </div>
       </section>
     </div>
   );
