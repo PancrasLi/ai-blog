@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "velite && next dev",
     "build": "velite && next build",
+    "export": "velite && next build && next export",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "deploy": "npm run export && git add out/ && git commit -m 'chore: deploy to gh-pages' && git push origin main"
   },
   "dependencies": {
     "react": "^18.3.1",
