@@ -9,9 +9,9 @@ import { ArrowLeft, Calendar, Tag } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 interface Props {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -22,7 +22,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const post = getPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
 
   if (!post) {
     return {
@@ -84,10 +85,14 @@ const mdxComponents = {
   ),
 };
 
-export default function PostPage({ params }: Props) {
-  const post = getPostBySlug(params.slug);
+export default async function PostPage({ params }: Props) {
+  const { slug } = await params;
+  console.log('[PostPage] Received slug:', slug);
+  const post = getPostBySlug(slug);
+  console.log('[PostPage] Got post:', post ? 'yes' : 'no');
 
   if (!post) {
+    console.error('[PostPage] Post not found for slug:', slug);
     notFound();
   }
 
@@ -159,7 +164,7 @@ export default function PostPage({ params }: Props) {
         </Button>
         <Button variant="ghost" asChild>
           <Link
-            href={`https://github.com/PancrasLi/ai-blog/edit/main/content/posts/${params.slug}.mdx`}
+            href={`https://github.com/PancrasLi/ai-blog/edit/main/content/posts/${slug}.mdx`}
             target="_blank"
           >
             在 GitHub 上编辑
