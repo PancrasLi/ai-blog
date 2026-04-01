@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, Zap, BookOpen, Code2, Calendar, Tag } from 'lucide-react';
+import { ArrowRight, Calendar, Tag } from 'lucide-react';
 import { getPosts } from '@/lib/posts';
 import { formatDate } from '@/lib/utils';
 
-const POSTS_PER_PAGE = 8;
+const POSTS_PER_PAGE = 12;
 
 export default function Home() {
   const allPosts = getPosts();
@@ -25,78 +25,72 @@ export default function Home() {
   const paginatedPosts = sortedPosts.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <section className="py-16 sm:py-24">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-6xl sm:text-7xl font-bold tracking-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
-                inig
+    <div className="space-y-0">
+      {/* AI Learning HERO Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background to-blue-50/5 dark:to-blue-950/10">
+        {/* Background animated grid */}
+        <div className="absolute inset-0 opacity-30 dark:opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent animate-gradient-flow" />
+        </div>
+
+        {/* Floating AI elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float-pulse" />
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-36 h-36 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float-pulse" style={{ animationDelay: '2s' }} />
+
+        {/* Central content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-8">
+          {/* Main title with animation */}
+          <div className="space-y-6">
+            <h1 className="text-7xl sm:text-8xl font-bold tracking-tighter">
+              <span className="block">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 animate-gradient-flow">
+                  inig
+                </span>
               </span>
             </h1>
-            <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl">
-              AI 学习平台。记录想法、探索技术、分享见解。
-            </p>
+
+            {/* Animated description with dots */}
+            <div className="space-y-4">
+              <p className="text-2xl sm:text-3xl text-muted-foreground font-light">
+                AI 学习平台
+              </p>
+
+              {/* Dot animation representing learning process */}
+              <div className="flex justify-center gap-2 h-8">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-dot-blink-1" />
+                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-dot-blink-2" />
+                <div className="w-2 h-2 rounded-full bg-purple-500 animate-dot-blink-3" />
+              </div>
+
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                记录想法、探索技术、分享见解
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button size="lg" asChild>
+          {/* CTA Button with ring pulse effect */}
+          <div className="relative inline-block pt-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-ring-pulse" />
+            <Button size="lg" asChild className="relative">
               <Link href="#articles">
                 浏览文章
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
+
+          {/* Scan line effect */}
+          <div className="absolute inset-x-0 top-1/3 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50 animate-scan-line" />
         </div>
+
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
-
-      {/* Quick Stats */}
-      <section className="py-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-blue-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">文章</p>
-                <p className="text-2xl font-bold">{sortedPosts.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Zap className="w-8 h-8 text-cyan-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">最新</p>
-                <p className="text-sm font-semibold truncate">
-                  {sortedPosts[0]?.metadata.date ? formatDate(sortedPosts[0].metadata.date) : '—'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Code2 className="w-8 h-8 text-purple-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">页数</p>
-                <p className="text-2xl font-bold">{Math.max(1, totalPages)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      <Separator />
 
       {/* Articles Section */}
-      <section id="articles" className="py-12 space-y-8">
-        <div className="space-y-2">
+      <section id="articles" className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
+        <div className="space-y-2 mb-12">
           <h2 className="text-4xl font-bold">最新文章</h2>
           <p className="text-muted-foreground">
             {sortedPosts.length} 篇 • 第 {currentPage} / {Math.max(1, totalPages)} 页
@@ -104,22 +98,22 @@ export default function Home() {
         </div>
 
         {paginatedPosts.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {paginatedPosts.map((post) => (
               <Link key={post.slug} href={`/posts/${post.slug}`}>
-                <Card className="hover:bg-accent transition-colors cursor-pointer">
-                  <CardContent className="py-4">
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg line-clamp-1 hover:text-blue-600 transition-colors">
-                            {post.metadata.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-                            {post.metadata.summary || '暂无摘要'}
-                          </p>
-                        </div>
+                <Card className="hover:shadow-lg hover:border-blue-500/50 transition-all duration-200 cursor-pointer h-full">
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-lg line-clamp-2 hover:text-blue-600 transition-colors mb-2">
+                          {post.metadata.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {post.metadata.summary || '暂无摘要'}
+                        </p>
                       </div>
+
+                      <Separator className="my-3" />
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -132,14 +126,16 @@ export default function Home() {
                         {post.metadata.tags.length > 0 && (
                           <div className="flex items-center gap-2">
                             <Tag className="h-3.5 w-3.5" />
-                            <div className="flex gap-1.5">
+                            <div className="flex gap-1.5 flex-wrap">
                               {post.metadata.tags.slice(0, 2).map((tag) => (
                                 <Badge key={tag} variant="secondary" className="text-xs py-0 px-1.5">
                                   {tag}
                                 </Badge>
                               ))}
                               {post.metadata.tags.length > 2 && (
-                                <span className="text-xs">+{post.metadata.tags.length - 2}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  +{post.metadata.tags.length - 2}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -161,7 +157,7 @@ export default function Home() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-8 flex-wrap">
+          <div className="flex items-center justify-center gap-2 pt-12 flex-wrap">
             <Button variant="outline" size="sm" disabled>
               上一页
             </Button>
@@ -190,38 +186,6 @@ export default function Home() {
             )}
           </div>
         )}
-      </section>
-
-      <Separator />
-
-      {/* About Section */}
-      <section className="py-12 max-w-2xl space-y-6">
-        <h2 className="text-3xl font-bold">关于</h2>
-
-        <div className="space-y-4 text-muted-foreground">
-          <p>
-            inig 是一个 AI 学习和探索平台。
-          </p>
-
-          <div className="space-y-3">
-            <h3 className="font-semibold text-foreground">特性</h3>
-            <ul className="space-y-2 text-sm">
-              <li>✨ 现代化设计，支持深色模式</li>
-              <li>⚡ 极速加载，完全静态生成</li>
-              <li>📝 完整 MDX 支持，丰富的内容表达</li>
-              <li>📊 表格、代码块、列表等复杂元素</li>
-              <li>📱 完全响应式，所有设备适配</li>
-              <li>🔍 SEO 友好，完整元数据支持</li>
-            </ul>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="font-semibold text-foreground">技术栈</h3>
-            <p className="text-sm">
-              Next.js 16 • React 18 • TypeScript • Tailwind CSS • Shadcn/UI • MDX • GitHub Pages
-            </p>
-          </div>
-        </div>
       </section>
     </div>
   );

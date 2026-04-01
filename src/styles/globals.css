@@ -72,3 +72,118 @@
     transform: translateY(0);
   }
 }
+
+/* AI Learning Animations */
+
+/* 浮动脉冲动画 - 代表 AI 思考过程 */
+@keyframes float-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateY(0px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-12px);
+  }
+}
+
+.animate-float-pulse {
+  animation: float-pulse 3s ease-in-out infinite;
+}
+
+/* 扫描线动画 - 代表 AI 扫描和学习 */
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 3s linear infinite;
+}
+
+/* 网络脉冲 - 代表连接和学习网络 */
+@keyframes network-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.animate-network-pulse {
+  animation: network-pulse 2.5s ease-in-out infinite;
+}
+
+/* 渐变流动 - 代表数据流 */
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-flow {
+  background-size: 200% 200%;
+  animation: gradient-flow 6s ease infinite;
+}
+
+/* 点阵加载 - 代表 AI 的离散计算单元 */
+@keyframes dot-blink {
+  0%, 20%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-dot-blink-1 {
+  animation: dot-blink 1.4s infinite;
+}
+
+.animate-dot-blink-2 {
+  animation: dot-blink 1.4s infinite 0.2s;
+}
+
+.animate-dot-blink-3 {
+  animation: dot-blink 1.4s infinite 0.4s;
+}
+
+/* 环形扫描 - 代表 AI 循环学习过程 */
+@keyframes ring-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ring-pulse {
+  animation: ring-pulse 2s ease-out infinite;
+}
