@@ -13,29 +13,25 @@
     "deploy": "npm run export && git add out/ && git commit -m 'chore: deploy to gh-pages' && git push origin main"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "next": "^14.2.0",
-    "next-themes": "^0.2.1",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^2.2.0",
-    "@radix-ui/react-slot": "^2.0.2",
-    "@radix-ui/react-separator": "^1.0.3",
-    "lucide-react": "^0.344.0",
-    "date-fns": "^3.0.0"
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "next": "14.0.4",
+    "next-themes": "0.2.1",
+    "clsx": "2.0.0",
+    "tailwind-merge": "2.2.0",
+    "lucide-react": "0.263.1",
+    "date-fns": "3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.0",
-    "@types/node": "^20.10.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "velite": "^0.2.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^3.4.0",
-    "eslint": "^8.54.0",
-    "eslint-config-next": "^14.2.0",
-    "@types/rss": "^0.0.32",
-    "prettier": "^3.1.0"
+    "typescript": "5.3.3",
+    "@types/node": "20.10.6",
+    "@types/react": "18.2.45",
+    "@types/react-dom": "18.2.18",
+    "autoprefixer": "10.4.16",
+    "postcss": "8.4.32",
+    "tailwindcss": "3.4.1",
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.0.4",
+    "prettier": "3.1.1"
   }
 }
