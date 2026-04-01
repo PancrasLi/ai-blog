@@ -45,44 +45,80 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-// MDX 组件
+// MDX 组件 - 增强版支持更多元素
 const mdxComponents = {
-  h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-4" {...props} />,
-  h2: ({ ...props }: any) => <h2 className="text-3xl font-bold mt-6 mb-3" {...props} />,
-  h3: ({ ...props }: any) => <h3 className="text-2xl font-bold mt-4 mb-2" {...props} />,
-  p: ({ ...props }: any) => <p className="text-base leading-7 mb-4" {...props} />,
+  // 标题
+  h1: ({ ...props }: any) => <h1 className="text-4xl font-bold mt-8 mb-4 text-foreground" {...props} />,
+  h2: ({ ...props }: any) => <h2 className="text-3xl font-bold mt-6 mb-3 text-foreground border-b pb-2" {...props} />,
+  h3: ({ ...props }: any) => <h3 className="text-2xl font-bold mt-4 mb-2 text-foreground" {...props} />,
+  h4: ({ ...props }: any) => <h4 className="text-xl font-semibold mt-3 mb-2" {...props} />,
+  h5: ({ ...props }: any) => <h5 className="text-lg font-semibold mt-2 mb-1" {...props} />,
+  h6: ({ ...props }: any) => <h6 className="text-base font-semibold" {...props} />,
+  
+  // 段落和文本
+  p: ({ ...props }: any) => <p className="text-base leading-7 mb-4 text-foreground" {...props} />,
+  strong: ({ ...props }: any) => <strong className="font-bold text-foreground" {...props} />,
+  em: ({ ...props }: any) => <em className="italic text-foreground" {...props} />,
+  
+  // 链接
   a: ({ ...props }: any) => (
     <a
-      className="text-blue-600 hover:text-blue-700 hover:underline"
+      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
       target="_blank"
       rel="noopener noreferrer"
       {...props}
     />
   ),
+  
+  // 代码
   code: ({ ...props }: any) => (
     <code
-      className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 rounded px-2 py-1 text-sm"
+      className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 rounded px-2 py-1 text-sm font-mono"
       {...props}
     />
   ),
   pre: ({ ...props }: any) => (
-    <pre className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 rounded p-4 mb-4 overflow-x-auto" {...props} />
+    <pre className="bg-gray-900 dark:bg-gray-800 text-gray-100 dark:text-gray-100 rounded-lg p-4 mb-4 overflow-x-auto border border-gray-700" {...props} />
   ),
-  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
-  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-  li: ({ ...props }: any) => <li className="ml-4" {...props} />,
+  
+  // 列表
+  ul: ({ ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2 text-foreground" {...props} />,
+  ol: ({ ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-2 text-foreground" {...props} />,
+  li: ({ ...props }: any) => <li className="ml-4 text-foreground" {...props} />,
+  
+  // 引用
   blockquote: ({ ...props }: any) => (
-    <blockquote className="border-l-4 border-blue-600 pl-4 italic my-4 text-gray-600 dark:text-gray-400" {...props} />
+    <blockquote className="border-l-4 border-blue-600 pl-4 italic my-4 text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 py-2 rounded" {...props} />
   ),
+  
+  // 表格 - 完整支持
   table: ({ ...props }: any) => (
-    <table className="w-full border-collapse mb-4 border border-gray-300 dark:border-gray-700" {...props} />
+    <div className="overflow-x-auto mb-4 rounded border border-gray-300 dark:border-gray-700">
+      <table className="w-full border-collapse" {...props} />
+    </div>
+  ),
+  thead: ({ ...props }: any) => (
+    <thead className="bg-gray-100 dark:bg-gray-900" {...props} />
+  ),
+  tbody: ({ ...props }: any) => (
+    <tbody className="divide-y divide-gray-300 dark:divide-gray-700" {...props} />
+  ),
+  tr: ({ ...props }: any) => (
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" {...props} />
   ),
   th: ({ ...props }: any) => (
-    <th className="border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 p-2 text-left" {...props} />
+    <th className="border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 p-3 text-left font-semibold text-foreground" {...props} />
   ),
   td: ({ ...props }: any) => (
-    <td className="border border-gray-300 dark:border-gray-700 p-2" {...props} />
+    <td className="border border-gray-300 dark:border-gray-700 p-3 text-foreground" {...props} />
   ),
+  
+  // 水平线
+  hr: ({ ...props }: any) => <hr className="my-6 border-gray-300 dark:border-gray-700" {...props} />,
+  
+  // 列表项中的段落
+  div: ({ ...props }: any) => <div {...props} />,
+  span: ({ ...props }: any) => <span {...props} />,
 };
 
 export default async function PostPage({ params }: Props) {

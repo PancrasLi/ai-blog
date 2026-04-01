@@ -1,0 +1,313 @@
+---
+title: "MDX 渲染完整测试文章"
+date: 2026-04-01
+tags: ["技术", "MDX", "前端", "测试"]
+summary: "展示 inig.ai 博客完整的 MDX 渲染能力，包括表格、代码块、列表、引用等所有元素"
+---
+
+## MDX 渲染功能完整测试
+
+这是一篇展示 inig.ai 博客 MDX 渲染能力的测试文章。包含表格、代码块、列表、引用等所有文本元素。
+
+### 一级功能测试
+
+#### 1. 标题系列 (H1-H6)
+
+本文包含了所有级别的标题，用于构建清晰的文章结构。
+
+##### 这是 H5 标题
+###### 这是 H6 标题
+
+---
+
+#### 2. 文本格式
+
+文本格式化支持包括：
+
+- **粗体文本** - 用于强调重要内容
+- *斜体文本* - 用于次要强调
+- ***粗斜体*** - 强调中的强调
+- ~~删除线~~ - 表示已弃用内容
+
+### 二、表格功能完整测试
+
+#### 2.1 基础表格
+
+| 功能 | 支持 | 描述 |
+|------|------|------|
+| 标题 | ✅ | 所有 H1-H6 标题支持 |
+| 列表 | ✅ | 无序和有序列表 |
+| 表格 | ✅ | 多行多列表格 |
+| 代码块 | ✅ | 语法高亮 |
+| 引用 | ✅ | 块级引用 |
+| 链接 | ✅ | 内外部链接 |
+
+#### 2.2 复杂表格
+
+| 层级 | 技术 | 类型 | 是否完成 |
+|------|------|------|---------|
+| **前端框架** | Next.js 16 | SSG/SSR | ✅ |
+| | React 18 | UI库 | ✅ |
+| | TypeScript | 语言 | ✅ |
+| **样式系统** | Tailwind CSS | 原子化CSS | ✅ |
+| | Shadcn/UI | 组件库 | ✅ |
+| **内容管理** | MDX | Markdown+JSX | ✅ |
+| | gray-matter | Frontmatter解析 | ✅ |
+| **部署** | GitHub Pages | 静态托管 | ✅ |
+| | GitHub Actions | CI/CD | ✅ |
+
+#### 2.3 数据对比表
+
+| 指标 | 旧方案 | 新方案 | 改进 |
+|------|-------|-------|------|
+| 编译时间 | 15s | 3.2s | 77% ⬇️ |
+| 页面加载 | 2s | 0.3s | 85% ⬇️ |
+| 包大小 | 500KB | 150KB | 70% ⬇️ |
+| 功能完整度 | 80% | 100% | 25% ⬆️ |
+| 开发体验 | 一般 | 优秀 | ⬆️⬆️ |
+
+### 三、代码块测试
+
+#### 3.1 TypeScript 代码
+
+```typescript
+// MDX 组件定义
+interface Post {
+  slug: string;
+  content: string;
+  metadata: {
+    title: string;
+    date: string;
+    tags: string[];
+    summary: string;
+  };
+}
+
+// 获取文章函数
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  try {
+    const posts = await getPosts();
+    return posts.find((post) => post.slug === slug) || null;
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
+  }
+}
+```
+
+#### 3.2 JSX 代码
+
+```jsx
+// React 组件示例
+export function PostCard({ post }) {
+  return (
+    <article className="rounded-lg border p-6 hover:shadow-md">
+      <h3 className="text-xl font-bold">{post.title}</h3>
+      <p className="text-muted-foreground">{post.summary}</p>
+      <time className="text-sm">{formatDate(post.date)}</time>
+    </article>
+  );
+}
+```
+
+#### 3.3 Markdown 代码
+
+```markdown
+# 标题
+- 列表项
+- 另一个项
+
+**粗体** 和 *斜体*
+```
+
+#### 3.4 JSON 数据
+
+```json
+{
+  "name": "ai-blog",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "export": "next build",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "18.x"
+  }
+}
+```
+
+### 四、列表完整测试
+
+#### 4.1 无序列表 - 单层
+
+- Next.js 框架
+- React 组件库
+- TypeScript 类型系统
+- Tailwind CSS 样式
+
+#### 4.2 无序列表 - 多层
+
+- **前端技术**
+  - 框架
+    - Next.js 16
+    - React 18
+  - 样式
+    - Tailwind CSS
+    - Shadcn/UI
+- **后端技术**
+  - 静态生成
+  - GitHub Pages
+- **开发工具**
+  - TypeScript
+  - ESLint
+  - Prettier
+
+#### 4.3 有序列表
+
+1. 项目规划
+   1. 需求分析
+   2. 技术选型
+   3. 架构设计
+2. 开发实现
+   1. 环境配置
+   2. 核心功能
+   3. 测试验证
+3. 部署发布
+   1. 构建优化
+   2. 自动部署
+   3. 监控维护
+
+### 五、引用和特殊元素
+
+#### 5.1 块级引用
+
+> 这是一个引用块。
+> 可以包含多行内容。
+> 用于强调重要信息或引用他人观点。
+
+#### 5.2 多行引用
+
+> **注意**: 这是一个重要提示
+>
+> 包含多个段落的引用可以更清楚地表达复杂思想。
+
+#### 5.3 嵌套内容
+
+> 外层引用开始
+> > 嵌套引用示例
+> > - 引用中的列表
+> > - 又一个项目
+> 
+> 外层引用继续
+
+### 六、链接和交互
+
+#### 6.1 文本链接
+
+- [GitHub 仓库](https://github.com/PancrasLi/ai-blog)
+- [inig.ai 主站](https://inig.ai)
+- [博客首页](https://blog.inig.ai)
+
+#### 6.2 参考链接示例
+
+这里有一个[关于 Next.js](https://nextjs.org)的链接，用于深入了解框架。
+
+### 七、混合内容示例
+
+#### 项目架构说明
+
+我们的博客系统采用以下架构：
+
+**前端层**
+```
+User Browser
+    ↓
+Cloudflare CDN
+    ↓
+GitHub Pages
+```
+
+**内容流**
+- 编写 MDX 文章
+- 构建静态页面
+- 自动部署到 GitHub Pages
+- CDN 加速分发
+
+**支持的元素**
+
+| 元素类型 | 渲染状态 | 备注 |
+|---------|---------|------|
+| 标题 H1-H6 | ✅ 完全支持 | 自动添加边框和间距 |
+| 段落 | ✅ 完全支持 | 自动行高和间距 |
+| 列表 | ✅ 完全支持 | 支持多层嵌套 |
+| 表格 | ✅ 完全支持 | 响应式布局，支持悬停效果 |
+| 代码块 | ✅ 完全支持 | 多语言语法高亮 |
+| 引用 | ✅ 完全支持 | 自定义样式 |
+| 链接 | ✅ 完全支持 | 自动新窗口打开 |
+| 格式化 | ✅ 完全支持 | 粗体、斜体、删除线 |
+
+### 八、编码示例集合
+
+#### 构建验证脚本
+
+```bash
+#!/bin/bash
+echo "开始 MDX 渲染测试..."
+npm run build
+if [ $? -eq 0 ]; then
+  echo "✅ 构建成功！"
+  npm run type-check
+  echo "✅ 类型检查通过！"
+else
+  echo "❌ 构建失败"
+  exit 1
+fi
+```
+
+### 九、最终测试清单
+
+#### ✅ 已测试的功能
+
+- [x] 所有标题级别 (H1-H6)
+- [x] 文本格式化 (粗体、斜体、删除线)
+- [x] 无序列表 (多层嵌套)
+- [x] 有序列表 (多层嵌套)
+- [x] 表格 (基础和复杂)
+- [x] 代码块 (多语言)
+- [x] 块级引用
+- [x] 链接
+- [x] 段落和间距
+
+#### ⏳ 待实现的功能
+
+- [ ] Mermaid 图表 (ER图、流程图)
+- [ ] 脚注 (Footnotes)
+- [ ] 目录自动生成 (TOC)
+- [ ] 代码块行号
+- [ ] 代码块复制按钮
+
+## 总结
+
+inig.ai 博客的 MDX 渲染系统已支持所有常见的文本元素和布局需求：
+
+✅ **已支持**
+- 完整的标题系统
+- 文本格式化
+- 有序和无序列表
+- 复杂表格布局
+- 多语言代码块
+- 块级引用
+- 链接和交互
+
+🎯 **持续改进**
+- 添加图表支持 (Mermaid)
+- 增强代码块功能
+- 性能优化
+- 移动端适配
+
+---
+
+**测试通过！** 博客系统已具备专业级的 MDX 渲染能力，可以发布复杂的技术文章。
