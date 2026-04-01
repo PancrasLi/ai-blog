@@ -22,7 +22,11 @@
     "@radix-ui/react-slot": "latest",
     "@radix-ui/react-separator": "latest",
     "lucide-react": "latest",
-    "date-fns": "latest"
+    "date-fns": "latest",
+    "next-mdx-remote": "latest",
+    "gray-matter": "latest",
+    "remark": "latest",
+    "remark-gfm": "latest"
   },
   "devDependencies": {
     "typescript": "latest",

@@ -4,18 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowRight, BookOpen, Code2, Sparkles } from 'lucide-react';
+import { getPosts } from '@/lib/posts';
+import { formatDate } from '@/lib/utils';
 
 export default function Home() {
-  const recentPosts = [
-    {
-      id: 1,
-      title: '2026年4月1日 - 每日智能体学习总结',
-      date: '2026-04-01',
-      excerpt: 'AI Blog 系统完成部署，建立每日学习内容发布机制',
-      tags: ['每日学习', '智能体', 'AI自主学习'],
-      readTime: '5 min',
-    },
-  ];
+  const posts = getPosts();
 
   return (
     <div className="space-y-12">
@@ -117,40 +110,48 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {recentPosts.map((post) => (
-              <Link key={post.id} href="#" className="block group">
-                <Card className="border-0 shadow-sm hover:shadow-md transition-all hover:border-border">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="group-hover:text-blue-600 transition-colors">
-                            {post.title}
-                          </CardTitle>
-                          <Badge variant="secondary" className="text-xs">
-                            {post.readTime}
-                          </Badge>
+          {posts.length === 0 ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-6 text-center">
+                <p className="text-muted-foreground">暂无文章</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <Link key={post.slug} href={`/posts/${post.slug}`} className="block group">
+                  <Card className="border-0 shadow-sm hover:shadow-md transition-all hover:border-border">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="group-hover:text-blue-600 transition-colors">
+                              {post.metadata.title}
+                            </CardTitle>
+                            <Badge variant="secondary" className="text-xs">
+                              {Math.ceil(post.content.split(/\s+/).length / 200)} min
+                            </Badge>
+                          </div>
+                          <CardDescription>{formatDate(post.metadata.date)}</CardDescription>
                         </div>
-                        <CardDescription>{post.date}</CardDescription>
+                        <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
                       </div>
-                      <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">{post.excerpt}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{post.metadata.summary}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {post.metadata.tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
