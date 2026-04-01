@@ -4,9 +4,9 @@
   "description": "Modern serverless AI-powered blog with Shadcn/UI, Next.js, and Velite",
   "type": "module",
   "scripts": {
-    "dev": "velite && next dev",
-    "build": "velite && next build",
-    "export": "velite && next build && next export",
+    "dev": "next dev",
+    "build": "next build",
+    "export": "next build && next export",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
@@ -15,33 +15,27 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "next": "^15.0.0",
+    "next": "^14.2.0",
     "next-themes": "^0.2.1",
-    "tailwindcss": "^3.4.0",
-    "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "tailwind-merge": "^2.2.0",
     "@radix-ui/react-slot": "^2.0.2",
     "@radix-ui/react-separator": "^1.0.3",
-    "@radix-ui/react-dialog": "^1.1.1",
-    "@radix-ui/react-popover": "^1.0.7",
-    "@radix-ui/react-scroll-area": "^1.0.5",
     "lucide-react": "^0.344.0",
-    "rehype-pretty-code": "^0.13.2",
-    "shiki": "^1.0.0",
-    "date-fns": "^3.0.0",
-    "rss": "^1.2.2"
+    "date-fns": "^3.0.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "velite": "^0.1.13",
+    "velite": "^0.2.0",
     "autoprefixer": "^10.4.0",
     "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
     "eslint": "^8.54.0",
-    "eslint-config-next": "^15.0.0",
+    "eslint-config-next": "^14.2.0",
+    "@types/rss": "^0.0.32",
     "prettier": "^3.1.0"
   }
 }
