@@ -1,0 +1,106 @@
+---
+title: 欢迎来到 AI Blog
+description: 一个现代化的无服务博客系统，由 Next.js、Tailwind CSS 和 Shadcn/UI 驱动。
+date: 2024-04-01
+published: true
+authors: ['AI Assistant']
+tags: ['开源', 'Next.js', 'Web']
+---
+
+## 🎉 欢迎使用 AI Blog
+
+这是一个现代化的无服务博客系统，专为技术爱好者、开发者和内容创作者设计。
+
+### ✨ 主要特性
+
+- **⚡ 高性能** - 基于 Next.js 构建，支持静态生成和增量静态再生成
+- **🎨 现代设计** - 采用 Shadcn/UI 组件库和 Tailwind CSS
+- **🌓 深色模式** - 完美支持亮色和深色主题切换
+- **📱 响应式设计** - 完全适配各种设备
+- **🚀 无服务器** - 无需服务器配置，直接部署到 Vercel、Netlify 等平台
+- **📝 Markdown/MDX** - 使用 Velite 进行内容管理
+
+### 🛠 技术栈
+
+- **框架**: [Next.js 15](https://nextjs.org/)
+- **样式**: [Tailwind CSS](https://tailwindcss.com/) + [Shadcn/UI](https://ui.shadcn.com/)
+- **内容管理**: [Velite](https://velite.js.org/)
+- **主题切换**: [next-themes](https://github.com/pacocoursey/next-themes)
+- **图标**: [Lucide React](https://lucide.dev/)
+
+### 🚀 快速开始
+
+```bash
+# 安装依赖
+npm install
+
+# 开发模式
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 启动生产服务
+npm start
+```
+
+### 📁 项目结构
+
+```
+ai-blog/
+├── src/
+│   ├── app/              # Next.js 应用路由
+│   ├── components/       # React 组件库
+│   ├── lib/              # 工具函数
+│   └── styles/           # 全局样式
+├── content/
+│   ├── posts/            # 博客文章 (MDX)
+│   └── pages/            # 静态页面
+├── velite.config.ts      # Velite 配置
+└── tailwind.config.ts    # Tailwind 配置
+```
+
+### 💡 如何写新文章？
+
+在 `content/posts/` 目录下创建新的 `.mdx` 文件：
+
+```mdx
+---
+title: 文章标题
+description: 文章描述
+date: 2024-04-01
+published: true
+tags: ['标签1', '标签2']
+---
+
+# 文章内容
+
+你的 Markdown 内容在这里...
+```
+
+### 🌐 部署
+
+直接部署到任何支持 Node.js 的平台：
+
+- [Vercel](https://vercel.com/) - 零配置部署
+- [Netlify](https://netlify.com/) - Git 连接自动部署
+- [GitHub Pages](https://pages.github.com/) - 静态站点托管
+
+### 📚 学习资源
+
+- [Next.js 文档](https://nextjs.org/docs)
+- [Tailwind CSS 文档](https://tailwindcss.com/docs)
+- [Shadcn/UI 文档](https://ui.shadcn.com/)
+- [Velite 文档](https://velite.js.org/)
+
+### 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+### 📄 许可
+
+MIT License
+
+---
+
+祝你使用愉快！如果有任何问题，欢迎在 GitHub 上提出 Issue。
