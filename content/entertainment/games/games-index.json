@@ -31,5 +31,60 @@
     "rating": 4.3,
     "plays": 1890,
     "tags": ["休闲", "街机", "反应", "挑战"]
+  },
+  {
+    "id": "memory-match",
+    "title": "记忆配对游戏",
+    "description": "训练记忆力和集中力。翻转卡片找到配对，挑战你的记忆能力。科学研究证明记忆训练能有效提升认知功能。",
+    "file": "memory-match.html",
+    "category": "puzzle",
+    "difficulty": "easy",
+    "rating": 4.6,
+    "plays": 1240,
+    "tags": ["益智", "记忆", "训练", "教育"]
+  },
+  {
+    "id": "quick-math",
+    "title": "快速数学",
+    "description": "在规定时间内快速完成数学运算。涵盖加减乘法，难度渐进式提升。能显著提高数学计算速度和反应能力。",
+    "file": "quick-math.html",
+    "category": "puzzle",
+    "difficulty": "medium",
+    "rating": 4.8,
+    "plays": 2150,
+    "tags": ["益智", "数学", "计算", "教育"]
+  },
+  {
+    "id": "word-spell",
+    "title": "单词拼写",
+    "description": "根据英文词义拼出正确的单词。包含 10 个常见英文单词，适合初学者和中级学习者。提升英文拼写能力和词汇量。",
+    "file": "word-spell.html",
+    "category": "puzzle",
+    "difficulty": "easy",
+    "rating": 4.5,
+    "plays": 980,
+    "tags": ["益智", "英文", "拼写", "教育"]
+  },
+  {
+    "id": "reaction-test",
+    "title": "反应测试",
+    "description": "科学测试你的反应速度。等待信号出现后尽快点击，记录个人反应时间。心理学研究表明反应速度与脑部活跃度相关。",
+    "file": "reaction-test.html",
+    "category": "arcade",
+    "difficulty": "easy",
+    "rating": 4.7,
+    "plays": 1650,
+    "tags": ["快速", "反应", "测试", "教育"]
+  },
+  {
+    "id": "logic-match",
+    "title": "逻辑消除",
+    "description": "经典逻辑推理游戏。选择三个相同的物品进行消除，难度随等级升高。锻炼逻辑思维和视觉识别能力。",
+    "file": "logic-match.html",
+    "category": "puzzle",
+    "difficulty": "medium",
+    "rating": 4.6,
+    "plays": 1420,
+    "tags": ["益智", "逻辑", "推理", "教育"]
   }
 ]
