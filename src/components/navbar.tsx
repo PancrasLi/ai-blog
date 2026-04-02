@@ -13,7 +13,6 @@ export function Navbar() {
   const navLinks = [
     { label: '博客', href: '/' },
     { label: '教育', href: '/education' },
-    { label: '教育游戏', href: '/education/games' },
     { label: '娱乐', href: '/entertainment' },
     { label: '关于', href: 'https://www.inig.ai', external: true },
   ];
