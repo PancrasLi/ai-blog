@@ -71,7 +71,7 @@ export function Footer() {
             © 2026 inig.ai
           </div>
           <div>
-            由 Next.js • Tailwind CSS • Shadcn/UI 驱动
+            由 Next.js • Tailwind CSS • Shadcn/UI • GitHub Pages 驱动
           </div>
         </div>
       </div>
