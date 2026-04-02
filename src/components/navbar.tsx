@@ -20,6 +20,15 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-1">
             <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
+              <Link href="/">博客</Link>
+            </Button>
+            <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
+              <Link href="/education">教育</Link>
+            </Button>
+            <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
+              <Link href="/entertainment">娱乐</Link>
+            </Button>
+            <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
               <a href="https://www.inig.ai" target="_blank" rel="noopener noreferrer">关于</a>
             </Button>
           </div>
