@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地下城探险：迷宫掌握者</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a0f0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #d4a574;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1100px;
+        }
+        
+        canvas {
+            border: 3px solid #8b7355;
+            background: #0d0705;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: rgba(20, 10, 5, 0.9);
+            border: 2px solid #8b7355;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #8b7355;
+        }
+        
+        .section h3 {
+            color: #d4a574;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .stat-label {
+            color: #a0826d;
+        }
+        
+        .stat-value {
+            color: #d4a574;
+            font-weight: bold;
+        }
+        
+        .bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(139, 115, 85, 0.2);
+            border: 1px solid #8b7355;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background: #d4a574;
+            transition: width 0.3s ease;
+        }
+        
+        .inventory {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .item-slot {
+            width: 50px;
+            height: 50px;
+            background: rgba(139, 115, 85, 0.2);
+            border: 1px solid #8b7355;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #a0826d;
+            cursor: pointer;
+        }
+        
+        .item-slot.filled {
+            background: rgba(212, 165, 116, 0.2);
+            border-color: #d4a574;
+            color: #d4a574;
+            font-weight: bold;
+        }
+        
+        .item-slot:hover {
+            background: rgba(212, 165, 116, 0.4);
+        }
+        
+        .map-miniature {
+            width: 100%;
+            height: 100px;
+            background: rgba(139, 115, 85, 0.1);
+            border: 1px solid #8b7355;
+            margin-top: 8px;
+            position: relative;
+        }
+        
+        .map-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+        }
+        
+        .player-dot {
+            background: #d4a574;
+            box-shadow: 0 0 5px #d4a574;
+        }
+        
+        .enemy-dot {
+            background: #ff4444;
+        }
+        
+        .treasure-dot {
+            background: #ffdd00;
+        }
+        
+        h1 {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 20px;
+            color: #d4a574;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <h1>🏰 地下城探险</h1>
+    
+    <div class="container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="sidebar">
+            <div class="section">
+                <h3>📊 角色属性</h3>
+                <div class="stat-row">
+                    <span class="stat-label">等级</span>
+                    <span class="stat-value" id="level">1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">经验</span>
+                    <span class="stat-value" id="exp">0/100</span>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill" id="expBar" style="width: 0%"></div>
+                </div>
+                
+                <div class="stat-row">
+                    <span class="stat-label">生命</span>
+                    <span class="stat-value" id="hp">100/100</span>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill" id="hpBar" style="width: 100%; background: #ff6666;"></div>
+                </div>
+                
+                <div class="stat-row">
+                    <span class="stat-label">魔法</span>
+                    <span class="stat-value" id="mp">50/50</span>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill" id="mpBar" style="width: 100%; background: #66ccff;"></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>⚔️ 能力</h3>
+                <div class="stat-row">
+                    <span class="stat-label">攻击力</span>
+                    <span class="stat-value" id="atk">10</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">防御力</span>
+                    <span class="stat-value" id="def">5</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">速度</span>
+                    <span class="stat-value" id="spd">10</span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>🎒 物品栏</h3>
+                <div class="inventory" id="inventory">
+                    <div class="item-slot">空</div>
+                    <div class="item-slot">空</div>
+                    <div class="item-slot">空</div>
+                    <div class="item-slot">空</div>
+                    <div class="item-slot">空</div>
+                    <div class="item-slot">空</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>💰 资源</h3>
+                <div class="stat-row">
+                    <span class="stat-label">金币</span>
+                    <span class="stat-value" id="gold">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">宝石</span>
+                    <span class="stat-value" id="gems">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">敌人击杀</span>
+                    <span class="stat-value" id="kills">0</span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>🗺️ 小地图</h3>
+                <div class="map-miniature" id="minimap"></div>
+            </div>
+            
+            <div class="section">
+                <h3>🎮 操作</h3>
+                <div style="font-size: 11px; color: #a0826d; line-height: 1.6;">
+                    WASD: 移动<br>
+                    空格: 攻击<br>
+                    E: 技能<br>
+                    R: 冲刺<br>
+                    点击物品: 使用
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        const game = {
+            level: 1,
+            currentRoom: 0,
+            player: {
+                x: 400,
+                y: 300,
+                width: 20,
+                height: 20,
+                hp: 100,
+                maxHp: 100,
+                mp: 50,
+                maxMp: 50,
+                exp: 0,
+                level: 1,
+                atk: 10,
+                def: 5,
+                spd: 10,
+                gold: 0,
+                gems: 0,
+                inventory: [],
+                kills: 0
+            },
+            
+            enemies: [],
+            projectiles: [],
+            particles: [],
+            items: [],
+            
+            keys: {},
+            
+            rooms: [
+                { width: 800, height: 600, enemyCount: 5 },
+                { width: 800, height: 600, enemyCount: 8 },
+                { width: 800, height: 600, enemyCount: 10 }
+            ]
+        };
+        
+        // 敌人类
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 18;
+                this.height = 18;
+                this.hp = 20;
+                this.maxHp = 20;
+                this.atk = 5;
+                this.speed = 2;
+                this.vx = 0;
+                this.vy = 0;
+            }
+            
+            update(player) {
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < 300) {
+                    this.vx = (dx / dist) * this.speed;
+                    this.vy = (dy / dist) * this.speed;
+                }
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // 边界
+                if (this.x < 0) this.x = 0;
+                if (this.x > 800) this.x = 800;
+                if (this.y < 0) this.y = 0;
+                if (this.y > 600) this.y = 600;
+            }
+            
+            draw() {
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(this.x - 9, this.y - 9, 18, 18);
+                
+                // HP 条
+                ctx.fillStyle = '#ff6666';
+                ctx.fillRect(this.x - 9, this.y - 20, 18, 2);
+                ctx.fillStyle = '#ffcccc';
+                ctx.fillRect(this.x - 9, this.y - 20, (18 * this.hp / this.maxHp), 2);
+            }
+        }
+        
+        // 初始化房间
+        function initRoom() {
+            game.enemies = [];
+            const roomData = game.rooms[game.currentRoom % game.rooms.length];
+            
+            for (let i = 0; i < roomData.enemyCount; i++) {
+                game.enemies.push(new Enemy(
+                    Math.random() * 600 + 100,
+                    Math.random() * 400 + 100
+                ));
+            }
+        }
+        
+        // 攻击敌人
+        function attackEnemy(enemy) {
+            const damage = game.player.atk + Math.floor(Math.random() * 5);
+            enemy.hp -= damage;
+            
+            if (enemy.hp <= 0) {
+                game.player.kills++;
+                game.player.exp += 30;
+                game.player.gold += 10;
+                game.enemies = game.enemies.filter(e => e !== enemy);
+            }
+        }
+        
+        // 更新
+        function update() {
+            // 玩家移动
+            if (game.keys['w'] || game.keys['W']) game.player.y -= 4;
+            if (game.keys['s'] || game.keys['S']) game.player.y += 4;
+            if (game.keys['a'] || game.keys['A']) game.player.x -= 4;
+            if (game.keys['d'] || game.keys['D']) game.player.x += 4;
+            
+            // 边界
+            if (game.player.x < 10) game.player.x = 10;
+            if (game.player.x > 790) game.player.x = 790;
+            if (game.player.y < 10) game.player.y = 10;
+            if (game.player.y > 590) game.player.y = 590;
+            
+            // 敌人更新和碰撞
+            game.enemies.forEach(enemy => {
+                enemy.update(game.player);
+                
+                // 碰撞检测
+                if (game.player.x < enemy.x + 9 &&
+                    game.player.x + 10 > enemy.x - 9 &&
+                    game.player.y < enemy.y + 9 &&
+                    game.player.y + 10 > enemy.y - 9) {
+                    
+                    // 敌人伤害玩家
+                    const damage = Math.max(1, enemy.atk - game.player.def);
+                    game.player.hp -= damage;
+                }
+            });
+            
+            // 攻击
+            if ((game.keys[' '] || game.keys['Spacebar']) && game.enemies.length > 0) {
+                const closest = game.enemies.reduce((prev, current) => {
+                    const prevDist = (game.player.x - prev.x) ** 2 + (game.player.y - prev.y) ** 2;
+                    const currDist = (game.player.x - current.x) ** 2 + (game.player.y - current.y) ** 2;
+                    return prevDist < currDist ? prev : current;
+                });
+                
+                const dist = Math.sqrt((game.player.x - closest.x) ** 2 + (game.player.y - closest.y) ** 2);
+                if (dist < 80) {
+                    attackEnemy(closest);
+                }
+                
+                game.keys[' '] = false;
+            }
+            
+            // 等级提升
+            if (game.player.exp >= 100 * game.player.level) {
+                game.player.level++;
+                game.player.atk += 2;
+                game.player.def += 1;
+                game.player.spd += 1;
+                game.player.maxHp += 20;
+                game.player.hp = game.player.maxHp;
+            }
+            
+            // MP 恢复
+            game.player.mp = Math.min(game.player.maxMp, game.player.mp + 0.1);
+            
+            // 房间清空检查
+            if (game.enemies.length === 0) {
+                game.currentRoom++;
+                initRoom();
+            }
+            
+            // 死亡检查
+            if (game.player.hp <= 0) {
+                game.player.hp = game.player.maxHp;
+                game.currentRoom = 0;
+                game.player.exp = 0;
+                initRoom();
+            }
+        }
+        
+        // 绘制
+        function draw() {
+            // 背景
+            ctx.fillStyle = '#0d0705';
+            ctx.fillRect(0, 0, 800, 600);
+            
+            // 网格
+            ctx.strokeStyle = 'rgba(139, 115, 85, 0.1)';
+            for (let i = 0; i < 800; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 600);
+                ctx.stroke();
+            }
+            for (let i = 0; i < 600; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(800, i);
+                ctx.stroke();
+            }
+            
+            // 房间信息
+            ctx.fillStyle = '#d4a574';
+            ctx.font = 'bold 16px Courier New';
+            ctx.fillText(`地下城 - 第 ${game.currentRoom + 1} 层`, 20, 30);
+            ctx.font = '12px Courier New';
+            ctx.fillText(`敌人: ${game.enemies.length}/${game.rooms[game.currentRoom % game.rooms.length].enemyCount}`, 20, 50);
+            
+            // 绘制敌人
+            game.enemies.forEach(enemy => {
+                enemy.draw();
+            });
+            
+            // 绘制玩家
+            ctx.fillStyle = '#d4a574';
+            ctx.fillRect(game.player.x - 10, game.player.y - 10, 20, 20);
+            
+            // 玩家 HP 条
+            ctx.fillStyle = '#ff6666';
+            ctx.fillRect(game.player.x - 10, game.player.y - 20, 20, 2);
+            ctx.fillStyle = '#ffcccc';
+            ctx.fillRect(game.player.x - 10, game.player.y - 20, (20 * game.player.hp / game.player.maxHp), 2);
+        }
+        
+        // 键盘事件
+        document.addEventListener('keydown', (e) => {
+            game.keys[e.key] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            game.keys[e.key] = false;
+        });
+        
+        // 更新 HUD
+        function updateHUD() {
+            document.getElementById('level').textContent = game.player.level;
+            document.getElementById('exp').textContent = game.player.exp + '/' + (100 * game.player.level);
+            document.getElementById('expBar').style.width = (game.player.exp / (100 * game.player.level) * 100) + '%';
+            
+            document.getElementById('hp').textContent = Math.max(0, game.player.hp) + '/' + game.player.maxHp;
+            document.getElementById('hpBar').style.width = (Math.max(0, game.player.hp) / game.player.maxHp * 100) + '%';
+            
+            document.getElementById('mp').textContent = Math.floor(game.player.mp) + '/' + game.player.maxMp;
+            document.getElementById('mpBar').style.width = (game.player.mp / game.player.maxMp * 100) + '%';
+            
+            document.getElementById('atk').textContent = game.player.atk;
+            document.getElementById('def').textContent = game.player.def;
+            document.getElementById('spd').textContent = game.player.spd;
+            
+            document.getElementById('gold').textContent = game.player.gold;
+            document.getElementById('gems').textContent = game.player.gems;
+            document.getElementById('kills').textContent = game.player.kills;
+        }
+        
+        // 主循环
+        function gameLoop() {
+            update();
+            draw();
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        initRoom();
+        gameLoop();
+    </script>
+</body>
+</html>
