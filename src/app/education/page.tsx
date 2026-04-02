@@ -15,20 +15,20 @@ export default function EducationPage() {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         {/* 页面标题 */}
-        <div className="mb-16 space-y-4">
+        <div className="mb-12 lg:mb-16 space-y-3 lg:space-y-4">
           <div>
-            <h1 className="text-5xl font-bold text-foreground mb-3">教育资讯</h1>
-            <p className="text-sm text-muted-foreground font-medium">创意来自 TAL/好未来 龙虾大赛</p>
+            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-2 lg:mb-3">教育资讯</h1>
+            <p className="text-xs lg:text-sm text-muted-foreground font-medium">创意来自 TAL/好未来 龙虾大赛</p>
           </div>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base lg:text-lg text-muted-foreground leading-relaxed">
             记录教育行业的前沿信息、发展趋势和创新案例
           </p>
-          <div className="h-1 w-16 bg-gradient-to-r from-blue-500 to-transparent rounded-full mt-4" />
+          <div className="h-1 w-12 lg:w-16 bg-gradient-to-r from-blue-500 to-transparent rounded-full mt-3 lg:mt-4" />
         </div>
 
         {/* 文章列表 */}
         {posts.length > 0 ? (
-          <div className="space-y-8">
+          <div className="space-y-4 lg:space-y-8">
             {posts.map((post, index) => (
               <Link key={post.slug} href={`/education/${post.slug}`}>
                 <article className="group relative">
@@ -36,17 +36,17 @@ export default function EducationPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
                   {/* 内容容器 */}
-                  <div className="relative border border-border rounded-xl px-8 py-8 hover:border-blue-500/50 hover:shadow-lg transition-all duration-300 cursor-pointer bg-background/50 backdrop-blur-sm">
-                    <div className="flex flex-col gap-4">
+                  <div className="relative border border-border rounded-lg lg:rounded-xl px-4 lg:px-8 py-6 lg:py-8 hover:border-blue-500/50 hover:shadow-lg transition-all duration-300 cursor-pointer bg-background/50 backdrop-blur-sm">
+                    <div className="flex flex-col gap-3 lg:gap-4">
                       {/* 标题和分类 */}
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-2 lg:gap-4">
                         <div className="flex-1 min-w-0">
-                          <h2 className="text-2xl font-bold text-foreground mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 line-clamp-2">
+                          <h2 className="text-lg lg:text-2xl font-bold text-foreground mb-1 lg:mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 line-clamp-2">
                             {post.metadata.title}
                           </h2>
                         </div>
                         {post.metadata.category && (
-                          <Badge variant="secondary" className="flex-shrink-0 whitespace-nowrap">
+                          <Badge variant="secondary" className="flex-shrink-0 whitespace-nowrap text-xs lg:text-sm">
                             <Folder className="h-3 w-3 mr-1" />
                             {post.metadata.category}
                           </Badge>
@@ -54,19 +54,19 @@ export default function EducationPage() {
                       </div>
 
                       {/* 摘要 */}
-                      <p className="text-base text-muted-foreground leading-relaxed line-clamp-2">
+                      <p className="text-sm lg:text-base text-muted-foreground leading-relaxed line-clamp-2">
                         {post.metadata.summary}
                       </p>
 
                       {/* 元数据 */}
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-blue-500/60" />
+                      <div className="flex items-center gap-3 lg:gap-6 text-xs lg:text-sm text-muted-foreground pt-1 lg:pt-2 flex-wrap">
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <Calendar className="h-3 w-3 lg:h-4 lg:w-4 text-blue-500/60" />
                           <time className="font-medium">{post.metadata.date}</time>
                         </div>
                         {post.metadata.tags.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Tag className="h-4 w-4 text-blue-500/60" />
+                          <div className="flex items-center gap-1 lg:gap-2">
+                            <Tag className="h-3 w-3 lg:h-4 lg:w-4 text-blue-500/60" />
                             <span className="font-medium">{post.metadata.tags.length} 标签</span>
                           </div>
                         )}
@@ -74,7 +74,7 @@ export default function EducationPage() {
 
                       {/* 标签 */}
                       {post.metadata.tags.length > 0 && (
-                        <div className="flex gap-2 flex-wrap pt-2">
+                        <div className="flex gap-2 flex-wrap pt-1 lg:pt-2 border-t border-border/50 lg:border-border mt-2 lg:mt-0">
                           {post.metadata.tags.map((tag) => (
                             <Badge 
                               key={tag} 
