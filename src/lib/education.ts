@@ -44,12 +44,16 @@ export function getEducationPosts(): EducationPost[] {
           const fileContent = fs.readFileSync(filePath, 'utf-8');
           const { data, content } = matter(fileContent);
 
+          const dateValue = data.date 
+            ? (data.date instanceof Date ? data.date.toISOString().split('T')[0] : String(data.date))
+            : new Date().toISOString().split('T')[0];
+
           return {
             slug,
             content,
             metadata: {
               title: data.title || slug,
-              date: data.date || new Date().toISOString().split('T')[0],
+              date: dateValue,
               category: data.category || '未分类',
               tags: data.tags || [],
               summary: data.summary || '',
