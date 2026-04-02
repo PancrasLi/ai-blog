@@ -161,7 +161,7 @@ export default function Home() {
                 <p className="text-muted-foreground">暂无记录</p>
               </CardContent>
             </Card>
-          )
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
