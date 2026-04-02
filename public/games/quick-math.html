@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快速数学</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            font-size: 24px;
+            color: #f5576c;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .question {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin: 30px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .timer {
+            text-align: center;
+            font-size: 36px;
+            color: #f5576c;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .option {
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #f5576c;
+            border-radius: 12px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .option:hover {
+            background: #f5576c;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .option.correct {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: white;
+        }
+        
+        .option.wrong {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            height: 30px;
+            margin: 20px 0;
+        }
+        
+        .message.correct {
+            color: #4caf50;
+        }
+        
+        .message.wrong {
+            color: #ff6b6b;
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 30px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .game-over.active {
+            display: block;
+        }
+        
+        .final-score {
+            font-size: 48px;
+            color: #f5576c;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #f5576c;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #e74c5c;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 快速数学</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span id="score">0</span>
+                <span class="stat-label">得分</span>
+            </div>
+            <div class="stat-item">
+                <span id="level">1</span>
+                <span class="stat-label">等级</span>
+            </div>
+        </div>
+        
+        <div id="gameContent">
+            <div class="timer" id="timer">10</div>
+            <div class="question" id="question">5 + 3 = ?</div>
+            
+            <div class="options" id="options"></div>
+            
+            <div class="message" id="message"></div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p>完成了 <span id="finalLevel">1</span> 个等级</p>
+        </div>
+        
+        <div class="controls">
+            <button onclick="resetGame()">重新开始</button>
+        </div>
+    </div>
+    
+    <script>
+        let score = 0;
+        let level = 1;
+        let timeLeft = 10;
+        let gameActive = true;
+        let currentQuestion = null;
+        let answered = false;
+        
+        function generateQuestion() {
+            const difficulty = Math.min(level, 10);
+            const a = Math.floor(Math.random() * difficulty * 10);
+            const b = Math.floor(Math.random() * difficulty * 10);
+            const operation = ['+', '-', '*'][Math.floor(Math.random() * 3)];
+            
+            let result;
+            switch(operation) {
+                case '+': result = a + b; break;
+                case '-': result = Math.abs(a - b); break;
+                case '*': result = a * b; break;
+            }
+            
+            currentQuestion = {
+                question: `${a} ${operation} ${b}`,
+                answer: result
+            };
+            
+            return currentQuestion;
+        }
+        
+        function generateOptions() {
+            const correct = currentQuestion.answer;
+            const options = [correct];
+            
+            while(options.length < 4) {
+                const wrong = correct + (Math.floor(Math.random() * 21) - 10);
+                if (wrong !== correct && !options.includes(wrong) && wrong >= 0) {
+                    options.push(wrong);
+                }
+            }
+            
+            return options.sort(() => Math.random() - 0.5);
+        }
+        
+        function renderQuestion() {
+            const question = generateQuestion();
+            document.getElementById('question').textContent = question.question + ' = ?';
+            
+            const options = generateOptions();
+            const optionsEl = document.getElementById('options');
+            optionsEl.innerHTML = '';
+            
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(option, option === question.answer);
+                optionsEl.appendChild(btn);
+            });
+            
+            document.getElementById('message').textContent = '';
+            answered = false;
+        }
+        
+        function checkAnswer(selected, isCorrect) {
+            if (answered) return;
+            answered = true;
+            
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => {
+                if (parseInt(opt.textContent) === currentQuestion.answer) {
+                    opt.classList.add('correct');
+                } else if (parseInt(opt.textContent) === selected && !isCorrect) {
+                    opt.classList.add('wrong');
+                }
+                opt.style.pointerEvents = 'none';
+            });
+            
+            const messageEl = document.getElementById('message');
+            if (isCorrect) {
+                score += Math.max(1, Math.floor(timeLeft / 2));
+                messageEl.textContent = '✅ 正确！';
+                messageEl.className = 'message correct';
+                
+                setTimeout(() => {
+                    level++;
+                    document.getElementById('level').textContent = level;
+                    timeLeft = 10;
+                    renderQuestion();
+                }, 1000);
+            } else {
+                messageEl.textContent = '❌ 错误！';
+                messageEl.className = 'message wrong';
+                endGame();
+            }
+            
+            document.getElementById('score').textContent = score;
+        }
+        
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                
+                if (timeLeft === 0) {
+                    clearInterval(timerInterval);
+                    if (!answered) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+        
+        function endGame() {
+            gameActive = false;
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('gameOver').classList.add('active');
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level;
+        }
+        
+        function resetGame() {
+            score = 0;
+            level = 1;
+            timeLeft = 10;
+            gameActive = true;
+            answered = false;
+            
+            document.getElementById('score').textContent = '0';
+            document.getElementById('level').textContent = '1';
+            document.getElementById('gameContent').style.display = 'block';
+            document.getElementById('gameOver').classList.remove('active');
+            
+            renderQuestion();
+            startTimer();
+        }
+        
+        resetGame();
+    </script>
+</body>
+</html>

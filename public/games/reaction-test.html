@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反应测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .test-area {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .test-area.ready {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .test-area.waiting {
+            background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+        }
+        
+        .test-area.green {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+        
+        .test-circle {
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .stat-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fa709a;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        
+        .btn-start {
+            background: #fa709a;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-start:hover {
+            background: #f5576c;
+            transform: scale(1.05);
+        }
+        
+        .message {
+            font-size: 18px;
+            font-weight: bold;
+            height: 30px;
+            margin: 15px 0;
+        }
+        
+        .message.fast {
+            color: #4caf50;
+        }
+        
+        .message.slow {
+            color: #ff9800;
+        }
+        
+        .message.toolate {
+            color: #f44336;
+        }
+        
+        .instructions {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ 反应测试</h1>
+        <p class="subtitle">测试你的反应速度</p>
+        
+        <div class="instructions">
+            <strong>游戏规则：</strong><br>
+            等待圆形变绿，然后尽快点击！
+        </div>
+        
+        <div class="test-area" id="testArea" onclick="handleClick()">
+            <div class="test-circle">准备</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="bestTime">-</div>
+                <div class="stat-label">最快</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="avgTime">-</div>
+                <div class="stat-label">平均</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="rounds">0</div>
+                <div class="stat-label">轮数</div>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="controls">
+            <button class="btn-start" id="startBtn" onclick="startTest()">开始测试</button>
+        </div>
+    </div>
+    
+    <script>
+        let testActive = false;
+        let testStarted = false;
+        let startTime = null;
+        let times = [];
+        let rounds = 0;
+        
+        function startTest() {
+            testActive = true;
+            testStarted = false;
+            document.getElementById('message').textContent = '';
+            document.getElementById('startBtn').textContent = '等待...';
+            document.getElementById('startBtn').disabled = true;
+            
+            const delay = 1000 + Math.random() * 3000;
+            setTimeout(() => {
+                if (!testActive) return;
+                
+                testStarted = true;
+                startTime = Date.now();
+                const testArea = document.getElementById('testArea');
+                testArea.className = 'test-area green';
+                testArea.querySelector('.test-circle').textContent = '点击！';
+            }, delay);
+        }
+        
+        function handleClick() {
+            if (!testActive) {
+                return;
+            }
+            
+            const testArea = document.getElementById('testArea');
+            
+            if (!testStarted) {
+                testArea.className = 'test-area waiting';
+                testArea.querySelector('.test-circle').textContent = '太早了！';
+                document.getElementById('message').textContent = '❌ 太早点击了！';
+                document.getElementById('message').className = 'message toolate';
+                resetTest();
+                return;
+            }
+            
+            const reactionTime = Date.now() - startTime;
+            times.push(reactionTime);
+            rounds++;
+            
+            testActive = false;
+            testStarted = false;
+            
+            testArea.className = 'test-area ready';
+            testArea.querySelector('.test-circle').textContent = reactionTime + 'ms';
+            
+            const messageEl = document.getElementById('message');
+            if (reactionTime < 200) {
+                messageEl.textContent = `✅ 太快了！${reactionTime}ms`;
+                messageEl.className = 'message fast';
+            } else if (reactionTime < 300) {
+                messageEl.textContent = `🎯 很不错！${reactionTime}ms`;
+                messageEl.className = 'message fast';
+            } else if (reactionTime < 400) {
+                messageEl.textContent = `👍 不错！${reactionTime}ms`;
+                messageEl.className = 'message slow';
+            } else {
+                messageEl.textContent = `⚠️ 有点慢：${reactionTime}ms`;
+                messageEl.className = 'message slow';
+            }
+            
+            updateStats();
+            document.getElementById('rounds').textContent = rounds;
+            
+            setTimeout(() => {
+                document.getElementById('startBtn').textContent = '再来一次';
+                document.getElementById('startBtn').disabled = false;
+            }, 800);
+        }
+        
+        function resetTest() {
+            testActive = false;
+            testStarted = false;
+            const testArea = document.getElementById('testArea');
+            testArea.className = 'test-area ready';
+            testArea.querySelector('.test-circle').textContent = '准备';
+            
+            setTimeout(() => {
+                document.getElementById('startBtn').textContent = '再来一次';
+                document.getElementById('startBtn').disabled = false;
+            }, 1000);
+        }
+        
+        function updateStats() {
+            if (times.length === 0) return;
+            
+            const best = Math.min(...times);
+            const avg = Math.round(times.reduce((a, b) => a + b) / times.length);
+            
+            document.getElementById('bestTime').textContent = best + 'ms';
+            document.getElementById('avgTime').textContent = avg + 'ms';
+        }
+    </script>
+</body>
+</html>

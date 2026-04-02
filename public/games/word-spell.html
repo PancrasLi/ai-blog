@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词拼写</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            font-size: 24px;
+            color: #4facfe;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .word-meaning {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .meaning-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        
+        .meaning {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .letters {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .letter {
+            padding: 15px;
+            border: 2px solid #4facfe;
+            border-radius: 10px;
+            background: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        
+        .letter:hover:not(.used) {
+            background: #4facfe;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .letter.used {
+            background: #e0e0e0;
+            color: #999;
+            cursor: default;
+            opacity: 0.5;
+        }
+        
+        .answer-box {
+            background: #f0f8ff;
+            border: 2px dashed #4facfe;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 5px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-clear {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background: #f57c00;
+            transform: scale(1.05);
+        }
+        
+        .btn-submit {
+            background: #4facfe;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-submit:hover {
+            background: #00f2fe;
+            transform: scale(1.05);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            height: 24px;
+            margin: 15px 0;
+        }
+        
+        .message.correct {
+            color: #4caf50;
+        }
+        
+        .message.wrong {
+            color: #ff6b6b;
+        }
+        
+        .progress {
+            text-align: center;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 单词拼写</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span id="correct">0</span>
+                <span class="stat-label">正确</span>
+            </div>
+            <div class="stat-item">
+                <span id="wrong">0</span>
+                <span class="stat-label">错误</span>
+            </div>
+        </div>
+        
+        <div class="word-meaning">
+            <div class="meaning-label">根据意思拼出单词：</div>
+            <div class="meaning" id="meaning">Apple is a fruit</div>
+        </div>
+        
+        <div class="letters" id="letters"></div>
+        
+        <div class="answer-box" id="answerBox"></div>
+        
+        <div class="controls">
+            <button class="btn-clear" onclick="clearAnswer()">清空</button>
+            <button class="btn-submit" onclick="checkAnswer()">提交</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+        <div class="progress" id="progress">单词 1/10</div>
+    </div>
+    
+    <script>
+        const words = [
+            { word: 'apple', meaning: '苹果 - 一种常见水果' },
+            { word: 'book', meaning: '书 - 用来阅读的物品' },
+            { word: 'computer', meaning: '电脑 - 信息处理设备' },
+            { word: 'happy', meaning: '快乐的 - 感到愉快' },
+            { word: 'school', meaning: '学校 - 学生学习的地方' },
+            { word: 'friend', meaning: '朋友 - 亲近的人' },
+            { word: 'music', meaning: '音乐 - 有节奏的声音' },
+            { word: 'nature', meaning: '自然 - 野外环境' },
+            { word: 'science', meaning: '科学 - 系统研究' },
+            { word: 'summer', meaning: '夏天 - 最热的季节' }
+        ];
+        
+        let currentWordIndex = 0;
+        let selectedLetters = [];
+        let correct = 0;
+        let wrong = 0;
+        
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+        
+        function renderWord() {
+            const word = words[currentWordIndex];
+            document.getElementById('meaning').textContent = word.meaning;
+            document.getElementById('progress').textContent = `单词 ${currentWordIndex + 1}/10`;
+            
+            const letters = shuffleArray(word.word.split(''));
+            const lettersEl = document.getElementById('letters');
+            lettersEl.innerHTML = '';
+            
+            letters.forEach((letter, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = letter.toUpperCase();
+                btn.className = 'letter';
+                btn.dataset.index = index;
+                btn.dataset.letter = letter;
+                btn.onclick = () => selectLetter(btn, letter);
+                lettersEl.appendChild(btn);
+            });
+            
+            selectedLetters = [];
+            renderAnswer();
+            document.getElementById('message').textContent = '';
+        }
+        
+        function selectLetter(btn, letter) {
+            if (btn.classList.contains('used')) return;
+            
+            btn.classList.add('used');
+            selectedLetters.push({letter, btn});
+            renderAnswer();
+        }
+        
+        function renderAnswer() {
+            const answer = selectedLetters.map(item => item.letter).join('').toUpperCase();
+            document.getElementById('answerBox').textContent = answer;
+        }
+        
+        function clearAnswer() {
+            selectedLetters.forEach(item => {
+                item.btn.classList.remove('used');
+            });
+            selectedLetters = [];
+            renderAnswer();
+        }
+        
+        function checkAnswer() {
+            const answer = selectedLetters.map(item => item.letter).join('');
+            const correctWord = words[currentWordIndex].word;
+            const messageEl = document.getElementById('message');
+            
+            if (answer === correctWord) {
+                messageEl.textContent = '✅ 正确！';
+                messageEl.className = 'message correct';
+                correct++;
+                document.getElementById('correct').textContent = correct;
+                
+                if (currentWordIndex < words.length - 1) {
+                    setTimeout(() => {
+                        currentWordIndex++;
+                        renderWord();
+                    }, 1000);
+                } else {
+                    messageEl.textContent = '🎉 全部完成！';
+                }
+            } else {
+                messageEl.textContent = '❌ 错误！请重试';
+                messageEl.className = 'message wrong';
+                wrong++;
+                document.getElementById('wrong').textContent = wrong;
+            }
+        }
+        
+        renderWord();
+    </script>
+</body>
+</html>

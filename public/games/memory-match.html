@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆配对游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 32px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card:hover:not(.matched) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .card.flipped {
+            background: white;
+            color: #333;
+            border: 2px solid #667eea;
+        }
+        
+        .card.matched {
+            background: #f0f0f0;
+            color: #999;
+            cursor: default;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .btn-reset {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 16px;
+            color: #667eea;
+            font-weight: bold;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 记忆配对游戏</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span id="moves">0</span>
+                <span class="stat-label">步数</span>
+            </div>
+            <div class="stat-item">
+                <span id="matches">0</span>
+                <span class="stat-label">配对</span>
+            </div>
+            <div class="stat-item">
+                <span id="timer">00:00</span>
+                <span class="stat-label">时间</span>
+            </div>
+        </div>
+        
+        <div class="game-board" id="gameBoard"></div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="controls">
+            <button class="btn-reset" onclick="resetGame()">重新开始</button>
+        </div>
+    </div>
+    
+    <script>
+        const emojis = ['🌟', '🎨', '🎭', '🎪', '🎯', '🎲', '🎸', '🎮'];
+        let cards = [];
+        let flipped = [];
+        let matched = [];
+        let moves = 0;
+        let matches = 0;
+        let startTime = null;
+        let gameActive = true;
+        
+        function initGame() {
+            const board = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+            cards = board.map((emoji, index) => ({
+                id: index,
+                emoji: emoji,
+                isFlipped: false,
+                isMatched: false
+            }));
+            
+            renderBoard();
+            startTime = Date.now();
+            startTimer();
+        }
+        
+        function renderBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            cards.forEach(card => {
+                const cardEl = document.createElement('button');
+                cardEl.className = 'card';
+                if (card.isFlipped || card.isMatched) {
+                    cardEl.classList.add('flipped');
+                    cardEl.textContent = card.emoji;
+                }
+                if (card.isMatched) {
+                    cardEl.classList.add('matched');
+                }
+                cardEl.onclick = () => flipCard(card.id);
+                gameBoard.appendChild(cardEl);
+            });
+        }
+        
+        function flipCard(id) {
+            if (!gameActive || flipped.length === 2) return;
+            if (cards[id].isFlipped || cards[id].isMatched) return;
+            
+            cards[id].isFlipped = true;
+            flipped.push(id);
+            
+            renderBoard();
+            
+            if (flipped.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                
+                if (cards[flipped[0]].emoji === cards[flipped[1]].emoji) {
+                    setTimeout(matchCards, 300);
+                } else {
+                    setTimeout(unflipCards, 800);
+                }
+            }
+        }
+        
+        function matchCards() {
+            cards[flipped[0]].isMatched = true;
+            cards[flipped[1]].isMatched = true;
+            matches++;
+            document.getElementById('matches').textContent = matches;
+            flipped = [];
+            
+            renderBoard();
+            
+            if (matches === emojis.length) {
+                gameActive = false;
+                document.getElementById('message').textContent = '🎉 恭喜！你赢了！';
+            }
+        }
+        
+        function unflipCards() {
+            cards[flipped[0]].isFlipped = false;
+            cards[flipped[1]].isFlipped = false;
+            flipped = [];
+            renderBoard();
+        }
+        
+        function startTimer() {
+            setInterval(() => {
+                if (!gameActive) return;
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timer').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 100);
+        }
+        
+        function resetGame() {
+            cards = [];
+            flipped = [];
+            matched = [];
+            moves = 0;
+            matches = 0;
+            gameActive = true;
+            document.getElementById('message').textContent = '';
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('matches').textContent = '0';
+            document.getElementById('timer').textContent = '00:00';
+            initGame();
+        }
+        
+        initGame();
+    </script>
+</body>
+</html>
