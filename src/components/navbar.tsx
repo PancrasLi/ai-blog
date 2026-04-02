@@ -26,6 +26,9 @@ export function Navbar() {
               <Link href="/education">教育</Link>
             </Button>
             <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
+              <Link href="/education/games">教育游戏</Link>
+            </Button>
+            <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
               <Link href="/entertainment">娱乐</Link>
             </Button>
             <Button variant="ghost" asChild size="sm" className="text-sm font-medium">

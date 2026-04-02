@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逻辑消除</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            font-size: 18px;
+            color: #a8edea;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .level-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tile {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            cursor: pointer;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tile.selected {
+            border-color: #666;
+            box-shadow: 0 0 10px rgba(102, 102, 102, 0.5);
+            transform: scale(1.08);
+        }
+        
+        .tile.matched {
+            background: #f0f0f0;
+            border-color: #ccc;
+            opacity: 0.3;
+            cursor: default;
+        }
+        
+        .tile.matched::after {
+            content: '✓';
+            position: absolute;
+            font-size: 40px;
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            height: 24px;
+            margin: 15px 0;
+        }
+        
+        .message.correct {
+            color: #4caf50;
+        }
+        
+        .message.wrong {
+            color: #f44336;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-next {
+            background: #a8edea;
+            color: #333;
+            flex: 1;
+        }
+        
+        .btn-next:hover:not(:disabled) {
+            background: #7dd9d3;
+            transform: scale(1.05);
+        }
+        
+        .btn-next:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        
+        .btn-restart {
+            background: #fed6e3;
+            color: #333;
+        }
+        
+        .btn-restart:hover {
+            background: #f8b0c8;
+            transform: scale(1.05);
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 30px 0;
+            display: none;
+        }
+        
+        .game-over.active {
+            display: block;
+        }
+        
+        .final-level {
+            font-size: 48px;
+            color: #a8edea;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧩 逻辑消除</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span id="level">1</span>
+                <span class="stat-label">等级</span>
+            </div>
+            <div class="stat-item">
+                <span id="score">0</span>
+                <span class="stat-label">得分</span>
+            </div>
+        </div>
+        
+        <div id="gameContent">
+            <div class="instructions">
+                点击三个<strong>相同的物品</strong>来消除它们
+            </div>
+            
+            <div class="level-info" id="levelInfo">等级 1</div>
+            
+            <div class="game-board" id="gameBoard"></div>
+            
+            <div class="message" id="message"></div>
+            
+            <div class="controls">
+                <button class="btn-next" id="nextBtn" onclick="nextLevel()" disabled>下一关</button>
+                <button class="btn-restart" onclick="restartGame()">重新开始</button>
+            </div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束！</h2>
+            <div class="final-level" id="finalLevel">1</div>
+            <p>完成了 <span id="finalScore">0</span> 分</p>
+            <button class="btn-restart" onclick="restartGame()" style="margin-top: 20px;">重新开始</button>
+        </div>
+    </div>
+    
+    <script>
+        const emojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍓', '🍒', '🍑', '🥝', '🍍'];
+        
+        let level = 1;
+        let score = 0;
+        let tiles = [];
+        let selected = [];
+        let gameActive = true;
+        
+        function generateLevel() {
+            const tilesCount = 9;
+            const pairs = Math.min(3, Math.floor(tilesCount / 3));
+            const emojisUsed = emojis.slice(0, pairs);
+            
+            tiles = [];
+            for (let i = 0; i < tilesCount; i++) {
+                tiles.push({
+                    id: i,
+                    emoji: emojisUsed[i % pairs],
+                    isMatched: false
+                });
+            }
+            
+            tiles = tiles.sort(() => Math.random() - 0.5);
+        }
+        
+        function renderBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            tiles.forEach((tile, index) => {
+                const tileEl = document.createElement('div');
+                tileEl.className = 'tile';
+                if (tile.isMatched) {
+                    tileEl.classList.add('matched');
+                }
+                if (selected.find(t => t.id === tile.id)) {
+                    tileEl.classList.add('selected');
+                }
+                if (!tile.isMatched) {
+                    tileEl.textContent = tile.emoji;
+                }
+                tileEl.onclick = () => selectTile(tile);
+                gameBoard.appendChild(tileEl);
+            });
+        }
+        
+        function selectTile(tile) {
+            if (!gameActive || tile.isMatched) return;
+            if (selected.find(t => t.id === tile.id)) return;
+            
+            selected.push(tile);
+            renderBoard();
+            
+            if (selected.length === 3) {
+                checkMatch();
+            }
+        }
+        
+        function checkMatch() {
+            const first = selected[0];
+            const second = selected[1];
+            const third = selected[2];
+            const messageEl = document.getElementById('message');
+            
+            if (first.emoji === second.emoji && second.emoji === third.emoji) {
+                first.isMatched = true;
+                second.isMatched = true;
+                third.isMatched = true;
+                
+                score += level * 10;
+                document.getElementById('score').textContent = score;
+                messageEl.textContent = '✅ 配对成功！';
+                messageEl.className = 'message correct';
+                
+                selected = [];
+                renderBoard();
+                
+                if (tiles.every(t => t.isMatched)) {
+                    gameActive = false;
+                    document.getElementById('nextBtn').disabled = false;
+                }
+            } else {
+                messageEl.textContent = '❌ 配对失败，重试！';
+                messageEl.className = 'message wrong';
+                
+                setTimeout(() => {
+                    selected = [];
+                    renderBoard();
+                    messageEl.textContent = '';
+                }, 600);
+            }
+        }
+        
+        function nextLevel() {
+            level++;
+            selected = [];
+            generateLevel();
+            renderBoard();
+            document.getElementById('level').textContent = level;
+            document.getElementById('levelInfo').textContent = `等级 ${level}`;
+            document.getElementById('message').textContent = '';
+            document.getElementById('nextBtn').disabled = true;
+            gameActive = true;
+        }
+        
+        function restartGame() {
+            level = 1;
+            score = 0;
+            selected = [];
+            gameActive = true;
+            
+            document.getElementById('level').textContent = '1';
+            document.getElementById('score').textContent = '0';
+            document.getElementById('levelInfo').textContent = '等级 1';
+            document.getElementById('message').textContent = '';
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('gameContent').style.display = 'block';
+            document.getElementById('gameOver').classList.remove('active');
+            
+            generateLevel();
+            renderBoard();
+        }
+        
+        generateLevel();
+        renderBoard();
+    </script>
+</body>
+</html>
