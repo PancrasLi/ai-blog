@@ -137,10 +137,59 @@
             z-index: 10;
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
+        
+        .fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 15;
+            transition: all 0.3s ease;
+        }
+        
+        .fullscreen-btn:hover {
+            background: #00dd66;
+            transform: scale(1.1);
+        }
+        
+        body.fullscreen-mode {
+            background: #000;
+        }
+        
+        body.fullscreen-mode .container {
+            gap: 0;
+            max-width: 100%;
+            width: 100%;
+        }
+        
+        body.fullscreen-mode .hud {
+            width: 280px;
+            opacity: 0.7;
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            border-left: 2px solid #00ff88;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.95);
+        }
+        
+        body.fullscreen-mode canvas {
+            width: calc(100vw - 280px);
+            height: 100vh;
+            border: none;
+        }
     </style>
 </head>
 <body>
     <h1>🚀 太空探险：星球矿工</h1>
+    <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ 全屏</button>
     
     <div class="container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
@@ -603,6 +652,53 @@
             updateHUD();
             requestAnimationFrame(gameLoop);
         }
+        
+        // 全屏功能
+        function toggleFullscreen() {
+            const body = document.body;
+            const btn = document.getElementById('fullscreenBtn');
+            
+            if (!body.classList.contains('fullscreen-mode')) {
+                // 进入全屏
+                body.classList.add('fullscreen-mode');
+                btn.textContent = '✕ 退出';
+                
+                // 尝试使用原生全屏 API
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => {});
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                }
+            } else {
+                // 退出全屏
+                body.classList.remove('fullscreen-mode');
+                btn.textContent = '⛶ 全屏';
+                
+                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+            }
+        }
+        
+        // ESC 键退出全屏
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                document.body.classList.remove('fullscreen-mode');
+                document.getElementById('fullscreenBtn').textContent = '⛶ 全屏';
+            }
+        });
+        
+        // 快捷键 F 进入全屏
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
         
         initGame();
         gameLoop();
