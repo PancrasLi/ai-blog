@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太空探险：星球矿工</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        canvas {
+            border: 2px solid #00ff88;
+            background: #001a1a;
+            flex: 1;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .hud {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .hud h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 10px;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .stat-label {
+            color: #aaa;
+        }
+        
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .resource {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .resource-bar {
+            flex: 1;
+            height: 20px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .resource-fill {
+            height: 100%;
+            background: #00ff88;
+            transition: width 0.3s ease;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #00ff88;
+        }
+        
+        .control-item {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        
+        .key {
+            display: inline-block;
+            background: #00ff88;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 10px;
+            margin-right: 5px;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #00ff88;
+        }
+        
+        .status-text {
+            color: #00ff88;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        h1 {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #00ff88;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 太空探险：星球矿工</h1>
+    
+    <div class="container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="hud">
+            <h3>⚙️ 系统信息</h3>
+            
+            <div class="stat">
+                <span class="stat-label">玩家等级</span>
+                <span class="stat-value" id="level">1</span>
+            </div>
+            
+            <div class="stat">
+                <span class="stat-label">经验值</span>
+                <span class="stat-value" id="exp">0%</span>
+            </div>
+            
+            <div class="stat">
+                <span class="stat-label">生命值</span>
+                <span class="stat-value" id="health">100/100</span>
+            </div>
+            
+            <div class="resource">
+                <span class="stat-label">体力</span>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="staminaBar" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <h3>💎 资源收集</h3>
+            
+            <div class="stat">
+                <span class="stat-label">金矿</span>
+                <span class="stat-value" id="gold">0</span>
+            </div>
+            
+            <div class="stat">
+                <span class="stat-label">稀有矿</span>
+                <span class="stat-value" id="rare">0</span>
+            </div>
+            
+            <div class="stat">
+                <span class="stat-label">能量晶体</span>
+                <span class="stat-value" id="crystal">0</span>
+            </div>
+            
+            <h3>🎯 目标</h3>
+            
+            <div class="stat">
+                <span class="stat-label">敌人击杀</span>
+                <span class="stat-value" id="kills">0</span>
+            </div>
+            
+            <div class="stat">
+                <span class="stat-label">地图进度</span>
+                <span class="stat-value" id="progress">0%</span>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 操作</h3>
+                <div class="control-item">
+                    <span class="key">WASD</span> 移动
+                </div>
+                <div class="control-item">
+                    <span class="key">鼠标</span> 射击
+                </div>
+                <div class="control-item">
+                    <span class="key">Space</span> 跳跃
+                </div>
+                <div class="control-item">
+                    <span class="key">E</span> 挖矿
+                </div>
+                <div class="control-item">
+                    <span class="key">Q</span> 技能
+                </div>
+            </div>
+            
+            <div class="status">
+                <div class="status-text" id="status">
+                    准备就绪。进入星球开始冒险！
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏对象
+        const game = {
+            player: {
+                x: 100,
+                y: 300,
+                width: 20,
+                height: 30,
+                vx: 0,
+                vy: 0,
+                speed: 5,
+                jumpPower: 12,
+                health: 100,
+                maxHealth: 100,
+                stamina: 100,
+                maxStamina: 100,
+                level: 1,
+                exp: 0,
+                maxExp: 100,
+                gold: 0,
+                rare: 0,
+                crystal: 0,
+                kills: 0,
+                isJumping: false
+            },
+            
+            camera: {
+                x: 0,
+                y: 0,
+                width: 800,
+                height: 600
+            },
+            
+            gravity: 0.6,
+            friction: 0.8,
+            
+            // 地形和平台
+            platforms: [
+                { x: 0, y: 550, width: 800, height: 50 }, // 底部
+                { x: 150, y: 450, width: 200, height: 20 },
+                { x: 450, y: 400, width: 200, height: 20 },
+                { x: 700, y: 300, width: 300, height: 20 }
+            ],
+            
+            enemies: [],
+            particles: [],
+            ore: [],
+            
+            keys: {}
+        };
+        
+        // 敌人类
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 15;
+                this.height = 15;
+                this.vx = Math.random() > 0.5 ? -2 : 2;
+                this.vy = 0;
+                this.health = 20;
+                this.maxHealth = 20;
+                this.speed = 2;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.vy += 0.6;
+                this.y += this.vy;
+                
+                // 碰撞检测
+                for (let platform of game.platforms) {
+                    if (this.x + this.width > platform.x &&
+                        this.x < platform.x + platform.width &&
+                        this.y + this.height >= platform.y &&
+                        this.y + this.height <= platform.y + 30) {
+                        this.vy = -5;
+                        this.y = platform.y - this.height;
+                    }
+                }
+                
+                // 边界反弹
+                if (this.x < 0 || this.x > 1000) {
+                    this.vx *= -1;
+                }
+            }
+            
+            draw(offsetX, offsetY) {
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(this.x - offsetX, this.y - offsetY, this.width, this.height);
+                
+                // 生命条
+                ctx.strokeStyle = '#ff4444';
+                ctx.strokeRect(this.x - offsetX, this.y - offsetY - 10, this.width, 3);
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(this.x - offsetX, this.y - offsetY - 10, (this.width * this.health / this.maxHealth), 3);
+            }
+        }
+        
+        // 矿石类
+        class Ore {
+            constructor(x, y, type = 'gold') {
+                this.x = x;
+                this.y = y;
+                this.width = 10;
+                this.height = 10;
+                this.type = type; // gold, rare, crystal
+                this.collected = false;
+            }
+            
+            draw(offsetX, offsetY) {
+                const colors = {
+                    gold: '#ffdd00',
+                    rare: '#ff00ff',
+                    crystal: '#00ffff'
+                };
+                
+                ctx.fillStyle = colors[this.type];
+                ctx.beginPath();
+                ctx.arc(this.x - offsetX, this.y - offsetY, this.width, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = colors[this.type];
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        
+        // 粒子类
+        class Particle {
+            constructor(x, y, vx, vy, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.life = 1;
+                this.decay = 0.02;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.3;
+                this.life -= this.decay;
+            }
+            
+            draw(offsetX, offsetY) {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x - offsetX, this.y - offsetY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            game.enemies = [];
+            for (let i = 0; i < 5; i++) {
+                game.enemies.push(new Enemy(200 + i * 150, 300));
+            }
+            
+            game.ore = [];
+            for (let i = 0; i < 20; i++) {
+                const type = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'rare' : 'crystal') : 'gold';
+                game.ore.push(new Ore(Math.random() * 1000, Math.random() * 500, type));
+            }
+        }
+        
+        // 更新游戏
+        function update() {
+            // 玩家移动
+            game.player.vx = 0;
+            if (game.keys['w'] || game.keys['W']) game.player.y -= game.player.speed;
+            if (game.keys['s'] || game.keys['S']) game.player.y += game.player.speed;
+            if (game.keys['a'] || game.keys['A']) game.player.vx = -game.player.speed;
+            if (game.keys['d'] || game.keys['D']) game.player.vx = game.player.speed;
+            
+            game.player.x += game.player.vx;
+            
+            // 重力
+            game.player.vy += game.gravity;
+            game.player.y += game.player.vy;
+            
+            // 跳跃
+            if ((game.keys[' '] || game.keys['Space']) && !game.player.isJumping) {
+                game.player.vy = -game.player.jumpPower;
+                game.player.isJumping = true;
+                game.player.stamina -= 10;
+            }
+            
+            // 挖矿
+            if (game.keys['e'] || game.keys['E']) {
+                game.player.stamina -= 0.5;
+            }
+            
+            // 平台碰撞
+            game.player.isJumping = true;
+            for (let platform of game.platforms) {
+                if (game.player.x + game.player.width > platform.x &&
+                    game.player.x < platform.x + platform.width &&
+                    game.player.y + game.player.height >= platform.y &&
+                    game.player.y + game.player.height <= platform.y + 30 &&
+                    game.player.vy > 0) {
+                    game.player.vy = 0;
+                    game.player.y = platform.y - game.player.height;
+                    game.player.isJumping = false;
+                }
+            }
+            
+            // 世界边界
+            if (game.player.x < 0) game.player.x = 0;
+            if (game.player.x + game.player.width > 1200) game.player.x = 1200 - game.player.width;
+            
+            // 更新摄像机
+            game.camera.x = game.player.x - 200;
+            if (game.camera.x < 0) game.camera.x = 0;
+            if (game.camera.x > 1200 - 800) game.camera.x = 1200 - 800;
+            
+            // 敌人更新
+            game.enemies.forEach((enemy, index) => {
+                enemy.update();
+                
+                // 敌人与玩家碰撞
+                if (game.player.x < enemy.x + enemy.width &&
+                    game.player.x + game.player.width > enemy.x &&
+                    game.player.y < enemy.y + enemy.height &&
+                    game.player.y + game.player.height > enemy.y) {
+                    if (game.player.vy > 0 && game.player.y < enemy.y) {
+                        enemy.health -= 10;
+                        game.player.vy = -8;
+                        game.player.exp += 10;
+                        
+                        if (enemy.health <= 0) {
+                            game.enemies.splice(index, 1);
+                            game.player.kills++;
+                            game.player.gold += 5;
+                        }
+                    } else {
+                        game.player.health -= 1;
+                    }
+                }
+            });
+            
+            // 矿石收集
+            game.ore.forEach((ore, index) => {
+                if (!ore.collected &&
+                    game.player.x < ore.x + 30 &&
+                    game.player.x + game.player.width > ore.x - 30 &&
+                    game.player.y < ore.y + 30 &&
+                    game.player.y + game.player.height > ore.y - 30) {
+                    
+                    ore.collected = true;
+                    
+                    // 添加粒子
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 * i) / 5;
+                        game.particles.push(new Particle(
+                            ore.x,
+                            ore.y,
+                            Math.cos(angle) * 3,
+                            Math.sin(angle) * 3,
+                            ore.type === 'gold' ? '#ffdd00' : ore.type === 'rare' ? '#ff00ff' : '#00ffff'
+                        ));
+                    }
+                    
+                    // 收集矿石
+                    if (ore.type === 'gold') game.player.gold += 10;
+                    else if (ore.type === 'rare') game.player.rare += 5;
+                    else game.player.crystal += 3;
+                    
+                    game.player.exp += 5;
+                }
+            });
+            
+            // 移除已收集的矿石
+            game.ore = game.ore.filter(ore => !ore.collected);
+            
+            // 体力恢复
+            game.player.stamina = Math.min(game.player.stamina + 0.1, game.player.maxStamina);
+            
+            // 等级提升
+            if (game.player.exp >= game.player.maxExp) {
+                game.player.level++;
+                game.player.exp = 0;
+                game.player.maxExp = 100 + game.player.level * 50;
+                game.player.health = game.player.maxHealth;
+            }
+        }
+        
+        // 绘制游戏
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 800, 600);
+            
+            const offsetX = game.camera.x;
+            const offsetY = 0;
+            
+            // 绘制星空背景
+            ctx.fillStyle = '#001a1a';
+            for (let i = 0; i < 50; i++) {
+                const x = (i * 100 - offsetX * 0.2) % 800;
+                const y = (i * 50) % 600;
+                ctx.fillRect(x, y, 2, 2);
+            }
+            
+            // 绘制平台
+            ctx.fillStyle = '#00ff88';
+            game.platforms.forEach(platform => {
+                ctx.fillRect(platform.x - offsetX, platform.y - offsetY, platform.width, platform.height);
+            });
+            
+            // 绘制矿石
+            game.ore.forEach(ore => {
+                if (!ore.collected) ore.draw(offsetX, offsetY);
+            });
+            
+            // 绘制敌人
+            game.enemies.forEach(enemy => {
+                enemy.draw(offsetX, offsetY);
+            });
+            
+            // 绘制粒子
+            game.particles = game.particles.filter(p => p.life > 0);
+            game.particles.forEach(particle => {
+                particle.update();
+                particle.draw(offsetX, offsetY);
+            });
+            
+            // 绘制玩家
+            ctx.fillStyle = '#00ff88';
+            ctx.fillRect(game.player.x - offsetX, game.player.y - offsetY, game.player.width, game.player.height);
+            
+            // 绘制玩家信息
+            ctx.fillStyle = '#00ff88';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText(`L${game.player.level}`, game.player.x - offsetX - 5, game.player.y - offsetY - 10);
+        }
+        
+        // 键盘事件
+        document.addEventListener('keydown', (e) => {
+            game.keys[e.key] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            game.keys[e.key] = false;
+        });
+        
+        // 更新 HUD
+        function updateHUD() {
+            document.getElementById('level').textContent = game.player.level;
+            document.getElementById('exp').textContent = Math.round((game.player.exp / game.player.maxExp) * 100) + '%';
+            document.getElementById('health').textContent = game.player.health + '/100';
+            document.getElementById('gold').textContent = game.player.gold;
+            document.getElementById('rare').textContent = game.player.rare;
+            document.getElementById('crystal').textContent = game.player.crystal;
+            document.getElementById('kills').textContent = game.player.kills;
+            
+            const staminaPercent = (game.player.stamina / game.player.maxStamina) * 100;
+            document.getElementById('staminaBar').style.width = staminaPercent + '%';
+            
+            const progress = Math.round((game.player.kills / 10) * 100);
+            document.getElementById('progress').textContent = Math.min(progress, 100) + '%';
+        }
+        
+        // 主游戏循环
+        function gameLoop() {
+            update();
+            draw();
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>

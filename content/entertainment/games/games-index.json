@@ -119,5 +119,27 @@
     "rating": 4.9,
     "plays": 950,
     "tags": ["记忆", "学习", "间隔重复", "教育"]
+  },
+  {
+    "id": "space-explorer",
+    "title": "太空探险：星球矿工",
+    "description": "复杂的 3A 级平台跳跃游戏。在外星球进行采矿、战斗和资源管理。包含物理引擎、敌人系统、等级提升和实时 HUD。完整的游戏体验。",
+    "file": "space-explorer.html",
+    "category": "action",
+    "difficulty": "hard",
+    "rating": 4.8,
+    "plays": 1320,
+    "tags": ["3A", "冒险", "采矿", "战斗", "复杂"]
+  },
+  {
+    "id": "dungeon-explorer",
+    "title": "地下城探险：迷宫掌主",
+    "description": "沉浸式 RPG 地下城探险游戏。与敌人战斗、升级角色、管理资源。实时战斗系统、属性成长、多层地下城。深度的角色扮演体验。",
+    "file": "dungeon-explorer.html",
+    "category": "rpg",
+    "difficulty": "hard",
+    "rating": 4.9,
+    "plays": 1450,
+    "tags": ["RPG", "地下城", "战斗", "升级", "复杂"]
   }
 ]
