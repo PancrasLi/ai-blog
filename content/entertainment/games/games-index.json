@@ -86,5 +86,38 @@
     "rating": 4.6,
     "plays": 1420,
     "tags": ["益智", "逻辑", "推理", "教育"]
+  },
+  {
+    "id": "feynman-concept-game",
+    "title": "费曼技巧：概念简化游戏",
+    "description": "根据费曼技巧设计的学习游戏。用最简单的语言解释复杂概念。帮助你验证知识掌握程度，从量子物理到区块链。",
+    "file": "feynman-concept-game.html",
+    "category": "learning",
+    "difficulty": "medium",
+    "rating": 4.8,
+    "plays": 850,
+    "tags": ["学习", "费曼技巧", "理解", "教育"]
+  },
+  {
+    "id": "pomodoro-simulator",
+    "title": "番茄工作法模拟器",
+    "description": "实际体验番茄工作法！25 分钟专注工作 + 5 分钟充分休息。添加任务，完成目标，体验科学的时间管理方法。",
+    "file": "pomodoro-simulator.html",
+    "category": "productivity",
+    "difficulty": "easy",
+    "rating": 4.7,
+    "plays": 1200,
+    "tags": ["时间管理", "番茄工作法", "效率", "教育"]
+  },
+  {
+    "id": "spaced-repetition-master",
+    "title": "间隔重复：记忆大师",
+    "description": "基于艾宾浩斯遗忘曲线的记忆游戏。按照最优间隔复习，永久掌握知识。体验科学记忆的力量，从短期记忆到长期掌握。",
+    "file": "spaced-repetition-master.html",
+    "category": "memory",
+    "difficulty": "easy",
+    "rating": 4.9,
+    "plays": 950,
+    "tags": ["记忆", "学习", "间隔重复", "教育"]
   }
 ]

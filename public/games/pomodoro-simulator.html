@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄工作法模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        
+        .timer-display {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .timer-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .timer-time {
+            font-size: 60px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stat-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f5576c;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .tasks {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .task-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .task-text {
+            flex: 1;
+        }
+        
+        .task-pomodoro {
+            background: #f093fb;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-start {
+            background: #f5576c;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-start:hover:not(:disabled) {
+            background: #f03a4f;
+            transform: scale(1.05);
+        }
+        
+        .btn-start:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        
+        .btn-pause {
+            background: #ff9800;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-pause:hover {
+            background: #f57c00;
+        }
+        
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+        
+        .add-task {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .add-task input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .add-task button {
+            padding: 10px 20px;
+            background: #f093fb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .add-task button:hover {
+            background: #e080e8;
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            height: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .message.good {
+            color: #4caf50;
+        }
+        
+        .message.warning {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍅 番茄工作法模拟器</h1>
+        
+        <div class="timer-display">
+            <div class="timer-label" id="timerLabel">工作中</div>
+            <div class="timer-time" id="timer">25:00</div>
+            <div class="status" id="status">准备开始工作</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="pomodoros">0</div>
+                <div class="stat-label">番茄完成</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalWork">0</div>
+                <div class="stat-label">工作分钟</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="tasksCompleted">0</div>
+                <div class="stat-label">任务完成</div>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="add-task">
+            <input type="text" id="taskInput" placeholder="添加任务（如：写代码）">
+            <button onclick="addTask()">添加</button>
+        </div>
+        
+        <div class="tasks" id="tasks">
+            <div style="text-align: center; color: #999; padding: 20px;">
+                还没有任务，点击"添加"创建一个吧！
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn-start" id="startBtn" onclick="toggleTimer()">开始工作</button>
+            <button class="btn-pause" id="pauseBtn" onclick="pauseTimer()" disabled>暂停</button>
+            <button class="btn-reset" onclick="resetTimer()">重置</button>
+        </div>
+    </div>
+    
+    <script>
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+        let isWorkTime = true;
+        let pomodorosCompleted = 0;
+        let totalWorkMinutes = 0;
+        let tasksCompleted = 0;
+        let tasks = [];
+        let interval = null;
+        
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+        
+        function startTimer() {
+            isRunning = true;
+            document.getElementById('startBtn').textContent = '工作中...';
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('pauseBtn').style.opacity = '1';
+            
+            interval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft === 0) {
+                    completePhase();
+                }
+            }, 1000);
+        }
+        
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(interval);
+            document.getElementById('startBtn').textContent = '继续';
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('pauseBtn').style.opacity = '0.5';
+        }
+        
+        function completePhase() {
+            pauseTimer();
+            
+            if (isWorkTime) {
+                pomodorosCompleted++;
+                totalWorkMinutes += 25;
+                document.getElementById('pomodoros').textContent = pomodorosCompleted;
+                document.getElementById('totalWork').textContent = totalWorkMinutes;
+                
+                document.getElementById('message').textContent = '✅ 一个番茄完成！现在休息 5 分钟';
+                document.getElementById('message').className = 'message good';
+                
+                isWorkTime = false;
+                timeLeft = 5 * 60;
+            } else {
+                if (pomodorosCompleted % 4 === 0) {
+                    document.getElementById('message').textContent = '🎉 完成 4 个番茄！长休息 15 分钟';
+                    document.getElementById('message').className = 'message good';
+                    timeLeft = 15 * 60;
+                } else {
+                    document.getElementById('message').textContent = '⏰ 休息时间结束，准备开始下一个番茄';
+                    document.getElementById('message').className = 'message warning';
+                    timeLeft = 25 * 60;
+                }
+                isWorkTime = true;
+            }
+            
+            updateDisplay();
+            document.getElementById('startBtn').textContent = '继续';
+        }
+        
+        function resetTimer() {
+            pauseTimer();
+            isWorkTime = true;
+            timeLeft = 25 * 60;
+            updateDisplay();
+            document.getElementById('message').textContent = '';
+            document.getElementById('startBtn').textContent = '开始工作';
+        }
+        
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            if (isWorkTime) {
+                document.getElementById('timerLabel').textContent = '工作中';
+                document.getElementById('status').textContent = '专注工作，避免打扰';
+            } else {
+                document.getElementById('timerLabel').textContent = '休息中';
+                document.getElementById('status').textContent = '充分放松，准备下一个番茄';
+            }
+        }
+        
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const taskText = input.value.trim();
+            
+            if (!taskText) return;
+            
+            tasks.push({
+                id: Date.now(),
+                text: taskText,
+                completed: false,
+                pomodoros: 0
+            });
+            
+            input.value = '';
+            renderTasks();
+        }
+        
+        function completeTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                if (task.completed) {
+                    task.pomodoros = pomodorosCompleted;
+                    tasksCompleted++;
+                    document.getElementById('tasksCompleted').textContent = tasksCompleted;
+                }
+                renderTasks();
+            }
+        }
+        
+        function renderTasks() {
+            const tasksContainer = document.getElementById('tasks');
+            
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">还没有任务，点击"添加"创建一个吧！</div>';
+                return;
+            }
+            
+            tasksContainer.innerHTML = tasks.map(task => `
+                <div class="task-item" style="${task.completed ? 'opacity: 0.5;' : ''}">
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                           onchange="completeTask(${task.id})">
+                    <div class="task-text" style="${task.completed ? 'text-decoration: line-through;' : ''}">
+                        ${task.text}
+                    </div>
+                    ${task.completed ? `<span class="task-pomodoro">${task.pomodoros} 番茄</span>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        updateDisplay();
+    </script>
+</body>
+</html>
