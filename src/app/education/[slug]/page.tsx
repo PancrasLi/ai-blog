@@ -20,9 +20,9 @@ function formatContent(content: string): string {
 }
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -35,7 +35,8 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 
 export async function generateMetadata({ params }: PageProps) {
-  const post = getEducationPostBySlug(params.slug);
+  const resolvedParams = await params;
+  const post = getEducationPostBySlug(resolvedParams.slug);
 
   if (!post) {
     return {
@@ -50,8 +51,9 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-export default function EducationPostPage({ params }: PageProps) {
-  const post = getEducationPostBySlug(params.slug);
+export default async function EducationPostPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const post = getEducationPostBySlug(resolvedParams.slug);
 
   if (!post) {
     notFound();
