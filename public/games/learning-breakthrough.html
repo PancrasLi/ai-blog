@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习突破者 - 时间管理游戏</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #gameContainer {
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(to bottom, #f0f4ff 0%, #e8f0ff 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #gameHeader {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .headerTitle { font-size: 24px; font-weight: bold; }
+        .headerStats { display: flex; gap: 30px; font-size: 14px; }
+        .stat { display: flex; align-items: center; gap: 8px; }
+        .statLabel { opacity: 0.8; }
+        .statValue { font-weight: bold; font-size: 16px; }
+        
+        #gameContent {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        #leftPanel {
+            flex: 1;
+            padding: 20px;
+            background: #f9fbff;
+            border-right: 2px solid #e0e8ff;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #rightPanel {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .panelTitle {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .taskItem {
+            background: white;
+            border: 2px solid #e0e8ff;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        
+        .taskItem:hover {
+            background: #f5f9ff;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .taskItem.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .taskPriority {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .priority1 { background: #ff6b6b; }
+        .priority2 { background: #ffa500; }
+        .priority3 { background: #4ecdc4; }
+        .priority4 { background: #bdc3c7; }
+        
+        .taskText {
+            flex: 1;
+        }
+        
+        .taskTime {
+            font-size: 12px;
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+        
+        #tomatoTimer {
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        #tomatoDisplay {
+            font-size: 48px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        #tomatoStatus {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .buttonGroup {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        #startBtn {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        #startBtn:hover:not(:disabled) {
+            background: #45b8ae;
+            transform: scale(1.05);
+        }
+        
+        #startBtn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        #resetBtn {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        #resetBtn:hover {
+            background: #7f8c8d;
+        }
+        
+        #progressBar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .progressItem {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        
+        .progressItem:last-child {
+            margin-bottom: 0;
+        }
+        
+        .progressLabel {
+            flex: 1;
+            color: #333;
+        }
+        
+        .progressCount {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        #stressBar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stressLabel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .stressBarOuter {
+            width: 100%;
+            height: 20px;
+            background: #e0e8ff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .stressBarInner {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #ffa500, #ff6b6b);
+            width: 40%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        
+        #gameMessage {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .messageEmoji {
+            font-size: 28px;
+            margin-right: 10px;
+        }
+        
+        .medalBox {
+            background: linear-gradient(135deg, #ffd89b, #ff9a56);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            display: none;
+        }
+        
+        .medalBox.show {
+            display: block;
+            animation: medalPop 0.5s ease-out;
+        }
+        
+        @keyframes medalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .medal {
+            font-size: 36px;
+            margin: 10px 0;
+        }
+        
+        .medalText {
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="gameHeader">
+            <div class="headerTitle">⏰ 学习突破者</div>
+            <div class="headerStats">
+                <div class="stat">
+                    <span class="statLabel">完成任务</span>
+                    <span class="statValue" id="completedCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="statLabel">番茄数</span>
+                    <span class="statValue" id="tomatoCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="statLabel">等级</span>
+                    <span class="statValue" id="levelDisplay">新手</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="gameContent">
+            <div id="leftPanel">
+                <div class="panelTitle">📋 今日任务列表</div>
+                <div id="taskList"></div>
+            </div>
+            
+            <div id="rightPanel">
+                <div>
+                    <div class="panelTitle">🍅 番茄工作法计时器</div>
+                    <div id="tomatoTimer">
+                        <div id="tomatoStatus">准备好了吗？</div>
+                        <div id="tomatoDisplay">25:00</div>
+                        <div style="font-size: 12px; opacity: 0.8;">点击下方开始学习</div>
+                    </div>
+                    
+                    <div class="buttonGroup">
+                        <button id="startBtn" onclick="game.startTimer()">开始学习</button>
+                        <button id="resetBtn" onclick="game.resetTimer()">重置</button>
+                    </div>
+                    
+                    <div id="progressBar">
+                        <div class="panelTitle" style="margin-bottom: 10px;">📊 进度统计</div>
+                        <div class="progressItem">
+                            <span class="progressLabel">紧急重要(Q1)</span>
+                            <span class="progressCount"><span id="q1Done">0</span>/<span id="q1Total">0</span></span>
+                        </div>
+                        <div class="progressItem">
+                            <span class="progressLabel">不紧急重要(Q2)</span>
+                            <span class="progressCount"><span id="q2Done">0</span>/<span id="q2Total">0</span></span>
+                        </div>
+                        <div class="progressItem">
+                            <span class="progressLabel">紧急不重要(Q3)</span>
+                            <span class="progressCount"><span id="q3Done">0</span>/<span id="q3Total">0</span></span>
+                        </div>
+                        <div class="progressItem">
+                            <span class="progressLabel">不紧急不重要(Q4)</span>
+                            <span class="progressCount"><span id="q4Done">0</span>/<span id="q4Total">0</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div id="stressBar">
+                        <div class="stressLabel">
+                            <span>😌 学习压力值 😰</span>
+                            <span id="stressValue">40%</span>
+                        </div>
+                        <div class="stressBarOuter">
+                            <div class="stressBarInner" id="stressBarInner"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="gameMessage">
+                        <span class="messageEmoji">👋</span>
+                        <span>选择一个任务，开始学习吧！</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const game = {
+            tasks: [
+                { id: 1, text: "数学练习：完成10道题", priority: 1, timeEst: 30, quadrant: 'Q1', done: false },
+                { id: 2, text: "英语单词背诵", priority: 1, timeEst: 25, quadrant: 'Q1', done: false },
+                { id: 3, text: "语文阅读理解", priority: 2, timeEst: 20, quadrant: 'Q2', done: false },
+                { id: 4, text: "整理错题本", priority: 2, timeEst: 20, quadrant: 'Q2', done: false },
+                { id: 5, text: "班级通知整理", priority: 3, timeEst: 10, quadrant: 'Q3', done: false },
+                { id: 6, text: "预习新课", priority: 2, timeEst: 25, quadrant: 'Q2', done: false },
+                { id: 7, text: "物理实验笔记", priority: 1, timeEst: 30, quadrant: 'Q1', done: false },
+                { id: 8, text: "刷手机视频", priority: 4, timeEst: 60, quadrant: 'Q4', done: false }
+            ],
+            
+            timerDuration: 25 * 60, // 25分钟
+            timerInterval: null,
+            timeLeft: 25 * 60,
+            isRunning: false,
+            tomatoCount: 0,
+            selectedTaskId: null,
+            stress: 40,
+            completedCount: 0,
+            
+            init() {
+                this.renderTasks();
+                this.updateStats();
+                this.updateMessage('选择一个任务，开始学习吧！👋');
+            },
+            
+            renderTasks() {
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = '';
+                
+                // 按四象限排序显示
+                const sorted = [...this.tasks].sort((a, b) => {
+                    const quadrantOrder = { 'Q1': 0, 'Q2': 1, 'Q3': 2, 'Q4': 3 };
+                    return quadrantOrder[a.quadrant] - quadrantOrder[b.quadrant];
+                });
+                
+                sorted.forEach(task => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = `taskItem ${task.done ? 'done' : ''} ${this.selectedTaskId === task.id ? 'selected' : ''}`;
+                    taskEl.style.opacity = task.done ? 0.5 : 1;
+                    taskEl.style.textDecoration = task.done ? 'line-through' : 'none';
+                    
+                    taskEl.innerHTML = `
+                        <div class="taskPriority priority${task.priority}">${['Q1','Q2','Q3','Q4'][task.priority-1]}</div>
+                        <div class="taskText">${task.text}</div>
+                        <div class="taskTime">${task.timeEst}m</div>
+                    `;
+                    
+                    taskEl.onclick = () => this.selectTask(task.id);
+                    taskList.appendChild(taskEl);
+                });
+            },
+            
+            selectTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (task.done) return;
+                
+                this.selectedTaskId = taskId;
+                this.renderTasks();
+                this.updateMessage(`已选中：${task.text} ⏰`);
+                this.stress = Math.max(20, this.stress - 5); // 选择任务，压力略降
+                this.updateStats();
+            },
+            
+            startTimer() {
+                if (!this.selectedTaskId) {
+                    this.updateMessage('⚠️ 请先选择一个任务！');
+                    return;
+                }
+                
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                document.getElementById('startBtn').textContent = '学习中...';
+                document.getElementById('startBtn').disabled = true;
+                
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimer();
+                    
+                    if (this.timeLeft <= 0) {
+                        this.completeSession();
+                    }
+                }, 1000);
+            },
+            
+            updateTimer() {
+                const mins = Math.floor(this.timeLeft / 60);
+                const secs = this.timeLeft % 60;
+                const display = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                document.getElementById('tomatoDisplay').textContent = display;
+                
+                // 颜色渐变：绿->黄->红
+                if (this.timeLeft > 15 * 60) {
+                    document.getElementById('tomatoTimer').style.background = 'linear-gradient(135deg, #4ecdc4, #45b8ae)';
+                } else if (this.timeLeft > 5 * 60) {
+                    document.getElementById('tomatoTimer').style.background = 'linear-gradient(135deg, #ffa500, #ff9a3d)';
+                } else {
+                    document.getElementById('tomatoTimer').style.background = 'linear-gradient(135deg, #ff6b6b, #ff8787)';
+                }
+            },
+            
+            completeSession() {
+                clearInterval(this.timerInterval);
+                this.isRunning = false;
+                
+                const task = this.tasks.find(t => t.id === this.selectedTaskId);
+                task.done = true;
+                
+                this.tomatoCount++;
+                this.completedCount++;
+                this.stress = Math.min(100, this.stress + 10); // 完成任务，压力略增
+                
+                // 检查是否应该给予奖励
+                const allDone = this.tasks.filter(t => t.quadrant !== 'Q4').every(t => t.done);
+                
+                this.resetTimer();
+                this.renderTasks();
+                this.updateStats();
+                
+                const emoji = ['🎉', '✨', '🌟', '💪'][this.tomatoCount % 4];
+                this.updateMessage(`${emoji} 太棒了！完成了一个番茄钟！休息5分钟吧！`);
+                
+                if (allDone) {
+                    this.showMedal('学习突破者', '🏆 恭喜！你已完成所有重要任务！');
+                }
+            },
+            
+            resetTimer() {
+                clearInterval(this.timerInterval);
+                this.isRunning = false;
+                this.timeLeft = this.timerDuration;
+                this.updateTimer();
+                document.getElementById('startBtn').textContent = '开始学习';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('tomatoStatus').textContent = '准备好了吗？';
+                document.getElementById('tomatoTimer').style.background = 'linear-gradient(135deg, #ff6b6b, #ff8787)';
+            },
+            
+            updateStats() {
+                document.getElementById('completedCount').textContent = this.completedCount;
+                document.getElementById('tomatoCount').textContent = this.tomatoCount;
+                
+                // 更新四象限统计
+                ['Q1', 'Q2', 'Q3', 'Q4'].forEach((q, idx) => {
+                    const num = idx + 1;
+                    const qTasks = this.tasks.filter(t => t.quadrant === q);
+                    const qDone = qTasks.filter(t => t.done).length;
+                    document.getElementById(`q${num}Done`).textContent = qDone;
+                    document.getElementById(`q${num}Total`).textContent = qTasks.length;
+                });
+                
+                // 更新等级
+                const levels = ['新手', '学徒', '高手', '大师', '传奇'];
+                const levelIdx = Math.min(Math.floor(this.tomatoCount / 3), 4);
+                document.getElementById('levelDisplay').textContent = levels[levelIdx];
+                
+                // 更新压力条
+                document.getElementById('stressValue').textContent = this.stress + '%';
+                document.getElementById('stressBarInner').style.width = this.stress + '%';
+            },
+            
+            updateMessage(msg) {
+                document.getElementById('gameMessage').innerHTML = `<span style="color: #333;">${msg}</span>`;
+            },
+            
+            showMedal(title, msg) {
+                const medalBox = document.createElement('div');
+                medalBox.className = 'medalBox show';
+                medalBox.innerHTML = `
+                    <div class="medal">🏆</div>
+                    <div class="medalText">${title}</div>
+                    <div style="font-size: 12px; margin-top: 8px;">${msg}</div>
+                `;
+                
+                const panel = document.getElementById('rightPanel');
+                const oldMedal = panel.querySelector('.medalBox');
+                if (oldMedal) oldMedal.remove();
+                panel.appendChild(medalBox);
+                
+                setTimeout(() => medalBox.remove(), 5000);
+            }
+        };
+        
+        // 初始化游戏
+        game.init();
+    </script>
+</body>
+</html>

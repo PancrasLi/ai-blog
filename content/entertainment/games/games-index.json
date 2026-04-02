@@ -152,5 +152,16 @@
     "rating": 4.8,
     "plays": 340,
     "tags": ["学习", "专注力", "反应", "儿童教育", "注意力"]
+  },
+  {
+    "id": "learning-breakthrough",
+    "title": "学习突破者：时间管理游戏",
+    "description": "针对孩子学习困境设计的科学游戏。结合四象限时间管理法、番茄工作法和压力管理。帮助孩子体验『紧急重要优先』原则，激发内驱力，克服拖延和压力。基于教育心理学和认知科学设计。",
+    "file": "learning-breakthrough.html",
+    "category": "learning",
+    "difficulty": "easy",
+    "rating": 4.9,
+    "plays": 0,
+    "tags": ["学习困境", "时间管理", "番茄工作法", "四象限法", "儿童教育", "压力管理", "内驱力"]
   }
 ]
