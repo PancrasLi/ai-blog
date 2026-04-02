@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     gameId: string;
-  };
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -18,7 +18,8 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 
 export async function generateMetadata({ params }: PageProps) {
-  const game = getGameById(params.gameId);
+  const resolvedParams = await params;
+  const game = getGameById(resolvedParams.gameId);
 
   if (!game) {
     return {
@@ -33,8 +34,9 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-export default function GamePage({ params }: PageProps) {
-  const game = getGameById(params.gameId);
+export default async function GamePage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const game = getGameById(resolvedParams.gameId);
 
   if (!game) {
     notFound();
