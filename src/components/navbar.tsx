@@ -8,26 +8,26 @@ import { Code2 } from 'lucide-react';
 
 export function Navbar() {
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-            <Code2 className="h-5 w-5 text-white" />
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200">
+          <div className="w-8 h-8 rounded bg-foreground flex items-center justify-center">
+            <Code2 className="h-5 w-5 text-background" />
           </div>
-          <span className="font-bold text-lg hidden sm:inline">inig.ai</span>
+          <span className="font-semibold text-base hidden sm:inline tracking-tight">inig.ai</span>
         </Link>
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-1">
-            <Button variant="ghost" asChild size="sm">
+            <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
               <Link href="#articles">文章</Link>
             </Button>
-            <Button variant="ghost" asChild size="sm">
+            <Button variant="ghost" asChild size="sm" className="text-sm font-medium">
               <Link href="#about">关于</Link>
             </Button>
           </div>
 
-          <Separator orientation="vertical" className="h-6 hidden sm:block" />
+          <Separator orientation="vertical" className="h-6 hidden sm:block bg-border" />
 
           <ThemeToggle />
         </div>
