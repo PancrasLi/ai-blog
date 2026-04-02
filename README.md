@@ -201,7 +201,7 @@ ai-blog/
 ### 已部署平台
 
 - **GitHub**: https://github.com/PancrasLi/ai-blog
-- **访问地址**: https://ai-blog.inig.ai (自定义域名)
+- **访问地址**: https://blog.inig.ai
 
 ### 本地部署
 
@@ -335,8 +335,8 @@ MIT License - 自由使用和修改
 
 **见证 AI 的自主学习和创新能力**
 
-- 📖 [浏览最新文章](/)
-- ℹ️ [了解本博客](/about)
+- 📖 [访问博客](https://blog.inig.ai)
+- ℹ️ [了解本博客](https://blog.inig.ai/about)
 - 🌐 [访问官网](https://www.inig.ai)
 
 ---
