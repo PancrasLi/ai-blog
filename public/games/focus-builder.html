@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专注力建造者 - Focus Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        #gameContainer {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+        }
+        #header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        #header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        #stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 15px 20px;
+            background: #f5f5f5;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        #gameArea {
+            padding: 30px;
+            text-align: center;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin-bottom: 20px;
+            cursor: crosshair;
+        }
+        #controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        #startBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            font-size: 18px;
+        }
+        #startBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        #pauseBtn, #resetBtn {
+            background: #f0f0f0;
+            color: #333;
+            padding: 10px 20px;
+        }
+        #pauseBtn:hover, #resetBtn:hover {
+            background: #e0e0e0;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed !important;
+        }
+        #message {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 20px;
+            min-height: 30px;
+        }
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            font-weight: bold;
+            animation: float-up 1s ease-out forwards;
+        }
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(0.5); }
+        }
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="header">
+            <h1>🎯 专注力建造者</h1>
+            <p>Focus Builder - 通过追踪目标来锻炼你的专注力</p>
+        </div>
+        
+        <div id="stats">
+            <div class="stat-item">
+                <div class="stat-label">关卡</div>
+                <div class="stat-value" id="levelDisplay">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">分数</div>
+                <div class="stat-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">精度</div>
+                <div class="stat-value" id="accuracyDisplay">0%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">连击</div>
+                <div class="stat-value" id="streakDisplay">0</div>
+            </div>
+        </div>
+        
+        <div id="gameArea">
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+            <div id="message">准备好了吗？点击"开始游戏"！</div>
+            <div id="controls">
+                <button id="startBtn">开始游戏</button>
+                <button id="pauseBtn" class="disabled">暂停</button>
+                <button id="resetBtn">重置</button>
+            </div>
+            <div class="info-box">
+                <strong>游戏规则：</strong> 尽快点击移动的彩色球体。每个正确点击都会提升你的关卡，球速也会加快。
+                看看你能保持多久的连击！锻炼你的反应速度和专注力。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game Variables
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let level = 1;
+        let streak = 0;
+        let accuracy = 0;
+        let totalClicks = 0;
+        let correctClicks = 0;
+
+        // Ball object
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 20,
+            vx: 0,
+            vy: 0,
+            color: '#667eea',
+            speed: 2
+        };
+
+        // Obstacles
+        let obstacles = [];
+        let maxObstacles = 3;
+
+        // Initialize game
+        function init() {
+            score = 0;
+            level = 1;
+            streak = 0;
+            correctClicks = 0;
+            totalClicks = 0;
+            ball.speed = 2;
+            obstacles = [];
+            createObstacles();
+            spawnBall();
+        }
+
+        // Create obstacles
+        function createObstacles() {
+            obstacles = [];
+            for (let i = 0; i < Math.min(maxObstacles, level); i++) {
+                obstacles.push({
+                    x: Math.random() * (canvas.width - 80) + 40,
+                    y: Math.random() * (canvas.height - 80) + 40,
+                    width: 40 + Math.random() * 30,
+                    height: 40 + Math.random() * 30,
+                    color: '#' + Math.floor(Math.random()*16777215).toString(16)
+                });
+            }
+        }
+
+        // Spawn ball with random direction
+        function spawnBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            
+            const angle = Math.random() * Math.PI * 2;
+            ball.vx = Math.cos(angle) * ball.speed;
+            ball.vy = Math.sin(angle) * ball.speed;
+            
+            ball.color = '#' + Math.floor(Math.random()*16777215).toString(16);
+        }
+
+        // Update ball position
+        function updateBall() {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Bounce off walls
+            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+                ball.vx *= -1;
+                ball.x = Math.max(ball.radius, Math.min(canvas.width - ball.radius, ball.x));
+            }
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.vy *= -1;
+                ball.y = Math.max(ball.radius, Math.min(canvas.height - ball.radius, ball.y));
+            }
+
+            // Check collision with obstacles
+            for (let obs of obstacles) {
+                if (checkRectCircleCollision(obs, ball)) {
+                    ball.vx *= -1.1;
+                    ball.vy *= -1.1;
+                    ball.speed *= 1.05;
+                    ball.vx = (ball.vx / Math.sqrt(ball.vx**2 + ball.vy**2)) * ball.speed;
+                    ball.vy = (ball.vy / Math.sqrt(ball.vx**2 + ball.vy**2)) * ball.speed;
+                }
+            }
+        }
+
+        // Check rectangle-circle collision
+        function checkRectCircleCollision(rect, circle) {
+            const closestX = Math.max(rect.x - rect.width/2, Math.min(circle.x, rect.x + rect.width/2));
+            const closestY = Math.max(rect.y - rect.height/2, Math.min(circle.y, rect.y + rect.height/2));
+            
+            const dx = circle.x - closestX;
+            const dy = circle.y - closestY;
+            
+            return (dx**2 + dy**2) < circle.radius**2;
+        }
+
+        // Draw game
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = 'rgba(245, 247, 250, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw obstacles
+            ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+            for (let obs of obstacles) {
+                ctx.fillRect(obs.x - obs.width/2, obs.y - obs.height/2, obs.width, obs.height);
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x - obs.width/2, obs.y - obs.height/2, obs.width, obs.height);
+            }
+
+            // Draw ball
+            ctx.fillStyle = ball.color;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Glow effect
+            ctx.strokeStyle = ball.color;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.3;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // Draw level indicator
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('Level: ' + level, 20, 30);
+        }
+
+        // Update UI
+        function updateUI() {
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('levelDisplay').textContent = level;
+            document.getElementById('streakDisplay').textContent = streak;
+            
+            if (totalClicks > 0) {
+                accuracy = Math.round((correctClicks / totalClicks) * 100);
+            }
+            document.getElementById('accuracyDisplay').textContent = accuracy + '%';
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (gameRunning && !gamePaused) {
+                updateBall();
+                draw();
+                updateUI();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Canvas click
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning || gamePaused) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const dx = ball.x - x;
+            const dy = ball.y - y;
+            const distance = Math.sqrt(dx**2 + dy**2);
+            
+            totalClicks++;
+            
+            if (distance <= ball.radius + 10) {
+                correctClicks++;
+                score += (10 * level) + (streak * 5);
+                streak++;
+                
+                // Create particle effect
+                createParticleEffect(e.clientX, e.clientY, '+' + ((10 * level) + (streak * 5)));
+                
+                // Level up every 5 correct clicks
+                if (correctClicks % 5 === 0) {
+                    level++;
+                    maxObstacles = Math.min(3 + Math.floor(level / 5), 8);
+                    createObstacles();
+                    ball.speed *= 1.1;
+                }
+                
+                spawnBall();
+            } else {
+                streak = 0;
+            }
+        });
+
+        // Create particle effect
+        function createParticleEffect(x, y, text) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.textContent = text;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.color = '#667eea';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        // Start button
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (!gameRunning) {
+                gameRunning = true;
+                gamePaused = false;
+                init();
+                document.getElementById('startBtn').textContent = '进行中...';
+                document.getElementById('startBtn').classList.add('disabled');
+                document.getElementById('pauseBtn').classList.remove('disabled');
+                document.getElementById('message').textContent = '游戏已开始！点击移动的球体...';
+            }
+        });
+
+        // Pause button
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (gameRunning) {
+                gamePaused = !gamePaused;
+                document.getElementById('pauseBtn').textContent = gamePaused ? '继续' : '暂停';
+                document.getElementById('message').textContent = gamePaused ? '游戏已暂停。点击"继续"恢复！' : '游戏已恢复！';
+            }
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            gameRunning = false;
+            gamePaused = false;
+            init();
+            document.getElementById('startBtn').textContent = '开始游戏';
+            document.getElementById('startBtn').classList.remove('disabled');
+            document.getElementById('pauseBtn').classList.add('disabled');
+            document.getElementById('pauseBtn').textContent = '暂停';
+            document.getElementById('message').textContent = '游戏已重置。准备好了吗？';
+            updateUI();
+            draw();
+        });
+
+        // Initialize
+        draw();
+        gameLoop();
+    </script>
+</body>
+</html>

@@ -141,5 +141,16 @@
     "rating": 4.9,
     "plays": 1450,
     "tags": ["RPG", "地下城", "战斗", "升级", "复杂"]
+  },
+  {
+    "id": "focus-builder",
+    "title": "专注力建造者",
+    "description": "针对儿童注意力散漫的高效训练游戏。通过追踪快速移动的目标来锻炼专注力、反应速度和视觉追踪能力。关卡渐进式上升，难度动态调整。",
+    "file": "focus-builder.html",
+    "category": "learning",
+    "difficulty": "medium",
+    "rating": 4.8,
+    "plays": 340,
+    "tags": ["学习", "专注力", "反应", "儿童教育", "注意力"]
   }
 ]
