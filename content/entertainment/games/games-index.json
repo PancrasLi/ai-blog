@@ -1,13 +1,35 @@
 [
   {
-    "id": "placeholder",
-    "title": "游戏正在开发中",
-    "description": "更多优秀的 H5 游戏即将上线",
-    "file": "placeholder.html",
-    "category": "placeholder",
+    "id": "2048",
+    "title": "2048",
+    "description": "经典数字合并游戏。合并相同的数字，最终达到 2048 获胜。考验策略思维和计划能力。",
+    "file": "2048.html",
+    "category": "puzzle",
+    "difficulty": "medium",
+    "rating": 4.7,
+    "plays": 2350,
+    "tags": ["益智", "数字", "策略", "经典"]
+  },
+  {
+    "id": "snake",
+    "title": "贪吃蛇",
+    "description": "复古街机游戏。控制蛇吃食物并不断成长，避免碰撞。简单易学但难以精通的永恒经典。",
+    "file": "snake.html",
+    "category": "arcade",
     "difficulty": "easy",
-    "rating": 0,
-    "plays": 0,
-    "tags": ["敬请期待"]
+    "rating": 4.5,
+    "plays": 3120,
+    "tags": ["经典", "街机", "快速", "挑战"]
+  },
+  {
+    "id": "flappy",
+    "title": "飞行小鸟",
+    "description": "像素风格的休闲游戏。点击使小鸟飞行，避开绿色管道。一碰即死的高难度挑战。",
+    "file": "flappy.html",
+    "category": "arcade",
+    "difficulty": "hard",
+    "rating": 4.3,
+    "plays": 1890,
+    "tags": ["休闲", "街机", "反应", "挑战"]
   }
 ]
