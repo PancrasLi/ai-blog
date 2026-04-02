@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>间隔重复：记忆大师</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .card {
+            background: white;
+            border: 2px solid #a8edea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: scale(1.02);
+            border-color: #fed6e3;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        
+        .card-content {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .card-hint {
+            font-size: 12px;
+            color: #a8edea;
+            margin-top: 10px;
+        }
+        
+        .card.revealed {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: white;
+        }
+        
+        .card.revealed .card-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .card.revealed .card-content {
+            color: white;
+        }
+        
+        .card.revealed .card-hint {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .card.correct {
+            background: #d4edda;
+            border-color: #4caf50;
+        }
+        
+        .card.wrong {
+            background: #f8d7da;
+            border-color: #f44336;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-remember {
+            background: #4caf50;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .btn-remember:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .btn-forget {
+            background: #f44336;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .btn-forget:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+        
+        .btn-skip {
+            background: #f0f0f0;
+            color: #333;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .btn-skip:hover {
+            background: #e0e0e0;
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            height: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .message.good {
+            color: #4caf50;
+        }
+        
+        .message.bad {
+            color: #f44336;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .game-over.active {
+            display: block;
+        }
+        
+        .final-score {
+            font-size: 48px;
+            color: #a8edea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .recall-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .recall-item {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .recall-item strong {
+            color: #333;
+        }
+        
+        .recall-item small {
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 间隔重复：记忆大师</h1>
+        <p class="subtitle">根据遗忘曲线复习，永久掌握知识！</p>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="learned">0</div>
+                <div class="stat-label">已学</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="remembered">0</div>
+                <div class="stat-label">记住</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="forgotten">0</div>
+                <div class="stat-label">遗忘</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="accuracy">0%</div>
+                <div class="stat-label">准确率</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div id="gameContent">
+            <div class="message" id="message"></div>
+            
+            <div class="card" id="card" onclick="toggleCard()">
+                <div class="card-label">问题</div>
+                <div class="card-content" id="cardFront">点击查看问题</div>
+                <div class="card-hint">点击翻牌查看答案</div>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn-forget" onclick="markForgot()">遗忘了</button>
+                <button class="btn-remember" onclick="markRemembered()">记住了</button>
+            </div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>学习完成！</h2>
+            <div class="final-score" id="finalScore">0%</div>
+            <p>准确回忆了 <span id="finalRemembered">0</span>/<span id="finalLearned">0</span> 个知识点</p>
+            
+            <div class="recall-grid">
+                <div class="recall-item">
+                    <strong id="firstRecall">第 1 天</strong>
+                    <small>间隔：1 天</small>
+                </div>
+                <div class="recall-item">
+                    <strong id="secondRecall">第 3 天</strong>
+                    <small>间隔：3 天</small>
+                </div>
+                <div class="recall-item">
+                    <strong id="thirdRecall">第 7 天</strong>
+                    <small>间隔：7 天</small>
+                </div>
+                <div class="recall-item">
+                    <strong id="fourthRecall">第 30 天</strong>
+                    <small>间隔：30 天</small>
+                </div>
+            </div>
+            
+            <button class="btn-remember" onclick="location.reload()" style="width: 100%; margin-top: 20px;">再来一次</button>
+        </div>
+    </div>
+    
+    <script>
+        const cards = [
+            { question: '艾宾浩斯遗忘曲线的发现者是谁？', answer: '赫尔曼·艾宾浩斯，德国心理学家' },
+            { question: '1 小时后会遗忘百分之几的内容？', answer: '大约 50% 遗忘率' },
+            { question: '最优的第一次复习间隔是多少？', answer: '1 天后' },
+            { question: '什么是间隔重复的核心原理？', answer: '在即将遗忘时进行复习' },
+            { question: 'SM-2 算法是什么？', answer: '优化间隔重复的算法，用于计算最优复习间隔' }
+        ];
+        
+        let currentIndex = 0;
+        let remembered = 0;
+        let forgotten = 0;
+        let cardFlipped = false;
+        
+        function loadCard() {
+            const card = cards[currentIndex];
+            document.getElementById('cardFront').textContent = card.question;
+            document.getElementById('card').className = 'card';
+            cardFlipped = false;
+            document.getElementById('message').textContent = '';
+            
+            updateStats();
+            updateProgress();
+        }
+        
+        function toggleCard() {
+            const card = cards[currentIndex];
+            if (!cardFlipped) {
+                document.getElementById('card').classList.add('revealed');
+                document.getElementById('cardFront').textContent = card.answer;
+                document.getElementById('card').querySelector('.card-hint').textContent = '点击或使用下方按钮选择';
+                cardFlipped = true;
+            }
+        }
+        
+        function markRemembered() {
+            if (!cardFlipped) {
+                document.getElementById('message').textContent = '❌ 请先翻牌查看答案';
+                document.getElementById('message').className = 'message bad';
+                return;
+            }
+            
+            remembered++;
+            document.getElementById('card').classList.add('correct');
+            document.getElementById('message').textContent = '✅ 很好！记住了这个知识';
+            document.getElementById('message').className = 'message good';
+            
+            setTimeout(nextCard, 1000);
+        }
+        
+        function markForgot() {
+            if (!cardFlipped) {
+                document.getElementById('message').textContent = '❌ 请先翻牌查看答案';
+                document.getElementById('message').className = 'message bad';
+                return;
+            }
+            
+            forgotten++;
+            document.getElementById('card').classList.add('wrong');
+            document.getElementById('message').textContent = '💡 下次需要更早复习这个知识';
+            document.getElementById('message').className = 'message bad';
+            
+            setTimeout(nextCard, 1000);
+        }
+        
+        function nextCard() {
+            currentIndex++;
+            if (currentIndex >= cards.length) {
+                endGame();
+            } else {
+                loadCard();
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('learned').textContent = currentIndex + 1;
+            document.getElementById('remembered').textContent = remembered;
+            document.getElementById('forgotten').textContent = forgotten;
+            
+            const accuracy = currentIndex > 0 ? Math.round(remembered / currentIndex * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+        
+        function updateProgress() {
+            const progress = (currentIndex / cards.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function endGame() {
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('gameOver').classList.add('active');
+            
+            const accuracy = Math.round(remembered / cards.length * 100);
+            document.getElementById('finalScore').textContent = accuracy + '%';
+            document.getElementById('finalRemembered').textContent = remembered;
+            document.getElementById('finalLearned').textContent = cards.length;
+        }
+        
+        loadCard();
+    </script>
+</body>
+</html>

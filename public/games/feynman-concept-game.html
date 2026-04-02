@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>费曼技巧：概念简化游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .concept-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .concept-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .concept-text {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .complexity {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .answer-area {
+            background: #f5f5f5;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 80px;
+        }
+        
+        .answer-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-submit {
+            background: #667eea;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-submit:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .btn-skip {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-skip:hover {
+            background: #e0e0e0;
+        }
+        
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .feedback.good {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.bad {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .reference {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .game-over.active {
+            display: block;
+        }
+        
+        .final-score {
+            font-size: 48px;
+            color: #667eea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 费曼技巧：概念简化游戏</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span id="score">0</span>
+                <span class="stat-label">得分</span>
+            </div>
+            <div class="stat-item">
+                <span id="level">1</span>
+                <span class="stat-label">概念</span>
+            </div>
+            <div class="stat-item">
+                <span id="total">5</span>
+                <span class="stat-label">总数</span>
+            </div>
+        </div>
+        
+        <div id="gameContent">
+            <div class="concept-box">
+                <div class="concept-label">用简单语言解释这个概念：</div>
+                <div class="concept-text" id="concept">量子叠加</div>
+                <div class="complexity">难度：中等</div>
+            </div>
+            
+            <div class="answer-area">
+                <div class="answer-label">你的简单解释（用小学生能听懂的语言）：</div>
+                <textarea id="answerText" placeholder="试着用最简单的语言解释..."></textarea>
+            </div>
+            
+            <div id="feedback"></div>
+            
+            <div class="controls">
+                <button class="btn-submit" onclick="checkAnswer()">提交答案</button>
+                <button class="btn-skip" onclick="skipQuestion()">跳过</button>
+            </div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>游戏完成！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p>你掌握了 <span id="masteredCount">0</span> 个概念的简化能力</p>
+            <button class="btn-submit" onclick="location.reload()" style="margin-top: 20px;">重新开始</button>
+        </div>
+    </div>
+    
+    <script>
+        const concepts = [
+            {
+                concept: '量子叠加',
+                explanation: '像一个硬币在空中转时，既是正面又是反面，直到被接住才确定。',
+                hints: ['状态', '未确定', '同时存在']
+            },
+            {
+                concept: '黑洞',
+                explanation: '一个非常强大的吸引力，连光都逃不出去的地方。',
+                hints: ['引力', '光线', '吸引']
+            },
+            {
+                concept: 'AI 大模型',
+                explanation: '一个通过学习大量文本数据，学会了识别模式的大型数学计算系统。',
+                hints: ['学习', '模式', '预测']
+            },
+            {
+                concept: '区块链',
+                explanation: '像一本公开的账本，每个人都能看到，每次修改都有记录，无法篡改。',
+                hints: ['账本', '记录', '公开']
+            },
+            {
+                concept: '蛋白质折叠',
+                explanation: '像把一根绳子以特定的方式折叠，最后形成一个功能性的形状。',
+                hints: ['折叠', '形状', '结构']
+            }
+        ];
+        
+        let currentIndex = 0;
+        let score = 0;
+        const API_KEY = 'demo'; // 使用简单的本地评分
+        
+        function checkAnswer() {
+            const answer = document.getElementById('answerText').value.trim();
+            const feedback = document.getElementById('feedback');
+            
+            if (!answer) {
+                feedback.className = 'feedback bad';
+                feedback.innerHTML = '❌ 请先输入你的解释';
+                return;
+            }
+            
+            // 简单的质量评估（基于长度和词汇）
+            const simplicity = evaluateSimplicity(answer);
+            
+            if (simplicity > 60) {
+                score += 10;
+                feedback.className = 'feedback good';
+                feedback.innerHTML = `✅ 很好！你的解释很简洁清晰！<div class="reference">参考：${concepts[currentIndex].explanation}</div>`;
+            } else if (simplicity > 40) {
+                score += 5;
+                feedback.className = 'feedback good';
+                feedback.innerHTML = `👍 不错！但可以更简单一点。<div class="reference">参考：${concepts[currentIndex].explanation}</div>`;
+            } else {
+                feedback.className = 'feedback bad';
+                feedback.innerHTML = `💡 可以试着用更简单的词汇。<div class="reference">参考：${concepts[currentIndex].explanation}</div>`;
+            }
+            
+            document.getElementById('score').textContent = score;
+            
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex >= concepts.length) {
+                    endGame();
+                } else {
+                    loadConcept();
+                }
+            }, 2000);
+        }
+        
+        function evaluateSimplicity(text) {
+            // 简单的评分系统
+            let score = 0;
+            
+            // 长度合理（不要太长）
+            if (text.length > 20 && text.length < 200) {
+                score += 30;
+            }
+            
+            // 使用了比喻或例子
+            if (text.includes('像') || text.includes('比如') || text.includes('例如')) {
+                score += 20;
+            }
+            
+            // 避免复杂词汇
+            const complexWords = ['虽然', '然而', '理论上', '本质上', '现象', '属性'];
+            let complexCount = 0;
+            complexWords.forEach(word => {
+                if (text.includes(word)) complexCount++;
+            });
+            score += Math.max(0, 20 - complexCount * 5);
+            
+            return Math.min(100, score);
+        }
+        
+        function skipQuestion() {
+            currentIndex++;
+            if (currentIndex >= concepts.length) {
+                endGame();
+            } else {
+                loadConcept();
+            }
+        }
+        
+        function loadConcept() {
+            const concept = concepts[currentIndex];
+            document.getElementById('concept').textContent = concept.concept;
+            document.getElementById('answerText').value = '';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('level').textContent = currentIndex + 1;
+        }
+        
+        function endGame() {
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('gameOver').classList.add('active');
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('masteredCount').textContent = Math.floor(score / 10);
+        }
+        
+        loadConcept();
+    </script>
+</body>
+</html>
