@@ -49,6 +49,12 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" href="https://blog.inig.ai" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7633076101353582"
+          crossOrigin="anonymous"
+        ></script>
       </head>
       <body className="min-h-screen bg-background font-sans antialiased flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
