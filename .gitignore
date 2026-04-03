@@ -49,3 +49,68 @@ turbo.json
 
 # Cache
 .eslintcache
+
+# ============================================
+# WeChat Integration - LOCAL ONLY (NEVER COMMIT!)
+# ============================================
+# All WeChat-related sensitive files must stay local
+# These files contain authentication tokens and secrets
+# DO NOT upload to GitHub or any remote repository
+
+# WeChat Cookies and Authentication
+cookies.json
+cookies.json.bak
+*.cookies
+.wechat_auth
+.wechat_token
+wechat_token.json
+
+# WeChat Configuration Files
+wechat.config.js
+wechat.env
+.wechat.env.local
+wechat-secrets.json
+wechat-config.json
+
+# WeChat Publisher Scripts (Local Only)
+wechat-publisher.js
+wechat-setup.sh
+publish.js
+test-cookies.js
+validate-cookies.js
+wechat-api-proxy.js
+
+# WeChat Local Directory
+wechat-local/
+wechat_local/
+.wechat_local/
+
+# WeChat Article Storage (Local)
+articles/
+wechat-articles/
+wechat-drafts/
+wechat-logs/
+wechat-tmp/
+
+# Sensitive Key Files
+*.key
+*.secret
+*.token
+.secrets/
+secrets.json
+
+# WeChat Logs
+wechat-*.log
+publish-*.log
+weixin.log
+
+# Temporary Files
+*.tmp
+*.bak
+*.swp
+.wechat_cache
+wechat_temp/
+
+# ============================================
+# End WeChat Section
+# ============================================
