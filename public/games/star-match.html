@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星辰消消乐</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a0033 0%, #330066 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .game-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(100, 200, 255, 0.5);
+        }
+        canvas {
+            background: linear-gradient(135deg, #000033 0%, #001a4d 100%);
+            border: 3px solid #64c8ff;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        .info {
+            color: #64c8ff;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        .score { font-size: 24px; font-weight: bold; color: #ffff00; }
+        .level { font-size: 14px; margin-top: 8px; }
+        .tips { font-size: 12px; margin-top: 8px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="info">
+            <div class="score">得分: <span id="score">0</span></div>
+            <div class="level">关卡: <span id="level">1</span> | 目标分数: <span id="target">500</span></div>
+            <div class="tips">点击3个相同颜色的相邻星星消除 | 按R重新开始</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const GRID_SIZE = 6;
+        const TILE_SIZE = 80;
+        const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#C7CEEA', '#FF9999'];
+        
+        let grid = [];
+        let score = 0;
+        let level = 1;
+        let selectedTiles = [];
+        let gameOver = false;
+        let levelTarget = 500;
+        
+        function initGame() {
+            grid = [];
+            for (let i = 0; i < GRID_SIZE; i++) {
+                grid[i] = [];
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    grid[i][j] = Math.floor(Math.random() * COLORS.length);
+                }
+            }
+            selectedTiles = [];
+            gameOver = false;
+        }
+        
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格背景
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const x = j * TILE_SIZE + 60;
+                    const y = i * TILE_SIZE + 60;
+                    const colorIdx = grid[i][j];
+                    
+                    // 绘制星星
+                    drawStar(x + TILE_SIZE/2, y + TILE_SIZE/2, 30, COLORS[colorIdx]);
+                    
+                    // 绘制选中框
+                    if (isSelected(i, j)) {
+                        ctx.strokeStyle = '#FFFF00';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 35, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // 绘制UI信息
+            ctx.fillStyle = '#64C8FF';
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText(`得分: ${score}`, 20, 40);
+            ctx.fillText(`关卡: ${level}`, 450, 40);
+            
+            if (selectedTiles.length > 0) {
+                ctx.fillStyle = '#FFE66D';
+                ctx.font = '14px Arial';
+                ctx.fillText(`已选: ${selectedTiles.length}`, 650, 40);
+            }
+        }
+        
+        function drawStar(cx, cy, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                const x = cx + radius * Math.cos(angle);
+                const y = cy + radius * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // 添加光晕效果
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function getGridPosition(x, y) {
+            const gridX = Math.floor((x - 60) / TILE_SIZE);
+            const gridY = Math.floor((y - 60) / TILE_SIZE);
+            
+            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                return { row: gridY, col: gridX };
+            }
+            return null;
+        }
+        
+        function isSelected(row, col) {
+            return selectedTiles.some(t => t.row === row && t.col === col);
+        }
+        
+        function areAdjacent(t1, t2) {
+            return Math.abs(t1.row - t2.row) + Math.abs(t1.col - t2.col) === 1;
+        }
+        
+        function handleClick(e) {
+            if (gameOver) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const pos = getGridPosition(x, y);
+            if (!pos) return;
+            
+            const clickedColor = grid[pos.row][pos.col];
+            
+            if (isSelected(pos.row, pos.col)) {
+                selectedTiles = selectedTiles.filter(t => !(t.row === pos.row && t.col === pos.col));
+                return;
+            }
+            
+            if (selectedTiles.length > 0) {
+                const lastSelected = selectedTiles[selectedTiles.length - 1];
+                
+                if (grid[lastSelected.row][lastSelected.col] !== clickedColor) {
+                    selectedTiles = [];
+                    return;
+                }
+                
+                if (!areAdjacent(lastSelected, pos)) {
+                    selectedTiles = [];
+                    return;
+                }
+            }
+            
+            selectedTiles.push(pos);
+            
+            if (selectedTiles.length >= 3) {
+                removeTiles();
+            }
+        }
+        
+        function removeTiles() {
+            const points = selectedTiles.length * 100;
+            score += points;
+            
+            selectedTiles.forEach(t => {
+                grid[t.row][t.col] = -1;
+            });
+            
+            dropTiles();
+            fillEmpty();
+            selectedTiles = [];
+            
+            if (score >= levelTarget) {
+                levelUp();
+            }
+        }
+        
+        function dropTiles() {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                for (let row = GRID_SIZE - 1; row > 0; row--) {
+                    if (grid[row][col] === -1) {
+                        let topRow = row - 1;
+                        while (topRow >= 0 && grid[topRow][col] === -1) {
+                            topRow--;
+                        }
+                        if (topRow >= 0) {
+                            grid[row][col] = grid[topRow][col];
+                            grid[topRow][col] = -1;
+                            row++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function fillEmpty() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === -1) {
+                        grid[i][j] = Math.floor(Math.random() * COLORS.length);
+                    }
+                }
+            }
+        }
+        
+        function levelUp() {
+            level++;
+            levelTarget += 200;
+            
+            // 增加难度
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (Math.random() < 0.3) {
+                        grid[i][j] = Math.floor(Math.random() * Math.min(COLORS.length, 4 + level));
+                    }
+                }
+            }
+        }
+        
+        function gameLoop() {
+            drawGrid();
+            
+            // 更新UI
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('target').textContent = levelTarget;
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 事件监听
+        canvas.addEventListener('click', handleClick);
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'r') {
+                score = 0;
+                level = 1;
+                levelTarget = 500;
+                selectedTiles = [];
+                initGame();
+            }
+        });
+        
+        // 启动游戏
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>
