@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, Tag } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { AdsenseDisplay } from '@/components/adsense-display';
 
 interface Props {
   params: Promise<{
@@ -216,9 +217,19 @@ export default async function PostPage({ params }: Props) {
             }}
           />
         </div>
+        
+        {/* Google AdSense Display Ad - 中部 */}
+        <div className="my-8">
+          <AdsenseDisplay slot="8574209632" format="auto" />
+        </div>
       </article>
 
       <Separator />
+
+      {/* Google AdSense Display Ad - 底部 */}
+      <div className="max-w-3xl mx-auto my-8">
+        <AdsenseDisplay slot="9284567891" format="horizontal" />
+      </div>
 
       {/* Footer Navigation */}
       <div className="flex justify-start py-4">

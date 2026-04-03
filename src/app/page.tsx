@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowRight, Calendar, Tag, BookOpen } from 'lucide-react';
 import { getPosts } from '@/lib/posts';
 import { formatDate } from '@/lib/utils';
+import { AdsenseDisplay } from '@/components/adsense-display';
 
 const POSTS_PER_PAGE = 12;
 
@@ -162,6 +163,11 @@ export default function Home() {
               </CardContent>
             </Card>
           )}
+
+          {/* Google AdSense Display Ad - 文章列表下方 */}
+          <div className="my-12">
+            <AdsenseDisplay slot="7392048156" format="auto" />
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
