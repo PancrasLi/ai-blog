@@ -174,5 +174,16 @@
     "rating": 4.7,
     "plays": 0,
     "tags": ["益智", "消消乐", "策略", "星空", "渐进难度", "视觉效果"]
+  },
+  {
+    "id": "cosmic-survivor",
+    "title": "宇宙生存者",
+    "description": "高能量roguelike射击游戏。控制防卫系统躲避和摧毁不断涌来的陨石和敌舰。收集能量升级武器火力和防护盾。波次渐进式提升难度，挑战你的反应速度和策略能力。支持键盘方向键或WASD控制，空格射击。",
+    "file": "cosmic-survivor.html",
+    "category": "action",
+    "difficulty": "hard",
+    "rating": 4.6,
+    "plays": 0,
+    "tags": ["动作", "射击", "roguelike", "生存", "波次系统", "能量升级", "高难度挑战"]
   }
 ]

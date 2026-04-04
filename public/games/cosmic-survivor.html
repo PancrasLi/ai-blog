@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宇宙生存者 - Cosmic Survivor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: #0a0e27;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(180deg, #0d1b2a 0%, #1a0f2e 100%);
+            border: 2px solid #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00d4ff;
+            font-size: 14px;
+            z-index: 10;
+        }
+        #score { margin-bottom: 5px; }
+        #health { margin-bottom: 5px; }
+        #level { margin-bottom: 5px; }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 2px solid #ff3333;
+            text-align: center;
+            z-index: 20;
+            display: none;
+            border-radius: 10px;
+        }
+        #gameOver h1 { color: #ff3333; margin-bottom: 20px; }
+        #gameOver p { color: #00d4ff; margin: 10px 0; }
+        #gameOver button {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #00d4ff;
+            border: none;
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div id="score">分数: 0</div>
+            <div id="health">生命: ❤❤❤</div>
+            <div id="level">波次: 1</div>
+        </div>
+        <div id="gameOver">
+            <h1>游戏结束</h1>
+            <p id="finalScore">最终分数: 0</p>
+            <p>按下方按钮重新开始</p>
+            <button onclick="location.reload()">重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        const game = {
+            score: 0,
+            health: 3,
+            level: 1,
+            wave: 0,
+            gameOver: false,
+            enemies: [],
+            projectiles: [],
+            particles: [],
+            powerups: [],
+            time: 0
+        };
+
+        // 玩家
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 30,
+            height: 30,
+            speed: 5,
+            shootCooldown: 0,
+            shootRate: 10,
+            firepower: 1
+        };
+
+        // 键盘输入
+        const keys = {};
+        window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        // 敌人类
+        class Enemy {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type || 'basic';
+                this.health = type === 'strong' ? 3 : 1;
+                this.speed = type === 'strong' ? 2 : 3;
+                this.width = type === 'strong' ? 25 : 20;
+                this.height = this.width;
+                this.shootCounter = Math.random() * 60;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.shootCounter++;
+                if (this.shootCounter > 80) {
+                    this.shoot();
+                    this.shootCounter = 0;
+                }
+            }
+
+            shoot() {
+                game.projectiles.push(new EnemyProjectile(this.x, this.y));
+            }
+
+            draw() {
+                if (this.type === 'strong') {
+                    ctx.fillStyle = '#ff6600';
+                    ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                    ctx.strokeStyle = '#ffaa00';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                } else {
+                    ctx.fillStyle = '#ff3333';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 玩家射弹
+        class Projectile {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.speed = 8;
+                this.width = 5;
+                this.height = 15;
+            }
+
+            update() {
+                this.y -= this.speed;
+            }
+
+            draw() {
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+            }
+        }
+
+        // 敌人射弹
+        class EnemyProjectile {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.speed = 4;
+                this.width = 4;
+                this.height = 12;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw() {
+                ctx.fillStyle = '#ff9900';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+            }
+        }
+
+        // 能量包
+        class PowerUp {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.width = 20;
+                this.height = 20;
+                this.speed = 2;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw() {
+                if (this.type === 'health') {
+                    ctx.fillStyle = '#ff00ff';
+                } else if (this.type === 'firepower') {
+                    ctx.fillStyle = '#ffff00';
+                }
+                ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+            }
+        }
+
+        // 粒子效果
+        class Particle {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.life = 20;
+                this.size = 5;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2;
+                this.life--;
+                this.size -= 0.15;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life / 20;
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // 更新游戏
+        function update() {
+            if (game.gameOver) return;
+
+            // 玩家移动
+            if (keys['ArrowLeft'] || keys['a']) player.x -= player.speed;
+            if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
+            if (keys['ArrowUp'] || keys['w']) player.y -= player.speed;
+            if (keys['ArrowDown'] || keys['s']) player.y += player.speed;
+
+            player.x = Math.max(player.width/2, Math.min(canvas.width - player.width/2, player.x));
+            player.y = Math.max(player.height/2, Math.min(canvas.height - player.height/2, player.y));
+
+            // 玩家射击
+            player.shootCooldown--;
+            if (keys[' '] && player.shootCooldown <= 0) {
+                for (let i = 0; i < player.firepower; i++) {
+                    const offset = (player.firepower - 1) * -8 + i * 16;
+                    game.projectiles.push(new Projectile(player.x + offset, player.y));
+                }
+                player.shootCooldown = player.shootRate;
+            }
+
+            // 生成敌人
+            game.time++;
+            if (game.time % (100 - game.level * 5) === 0) {
+                const enemyType = Math.random() > 0.7 ? 'strong' : 'basic';
+                game.enemies.push(new Enemy(Math.random() * (canvas.width - 40) + 20, -20, enemyType));
+            }
+
+            // 更新敌人
+            for (let i = game.enemies.length - 1; i >= 0; i--) {
+                game.enemies[i].update();
+                if (game.enemies[i].y > canvas.height) {
+                    game.enemies.splice(i, 1);
+                    game.health--;
+                    if (game.health <= 0) {
+                        game.gameOver = true;
+                    }
+                }
+            }
+
+            // 更新射弹
+            for (let i = game.projectiles.length - 1; i >= 0; i--) {
+                game.projectiles[i].update();
+                if (game.projectiles[i].y < 0 || game.projectiles[i].y > canvas.height) {
+                    game.projectiles.splice(i, 1);
+                }
+            }
+
+            // 碰撞检测
+            for (let i = game.projectiles.length - 1; i >= 0; i--) {
+                for (let j = game.enemies.length - 1; j >= 0; j--) {
+                    const dx = game.projectiles[i].x - game.enemies[j].x;
+                    const dy = game.projectiles[i].y - game.enemies[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist < game.projectiles[i].width + game.enemies[j].width/2) {
+                        game.enemies[j].health--;
+                        game.projectiles.splice(i, 1);
+                        
+                        for (let p = 0; p < 5; p++) {
+                            const angle = (Math.PI * 2 * p) / 5;
+                            game.particles.push(new Particle(
+                                game.enemies[j].x,
+                                game.enemies[j].y,
+                                Math.cos(angle) * 3,
+                                Math.sin(angle) * 3
+                            ));
+                        }
+
+                        if (game.enemies[j].health <= 0) {
+                            game.score += 10;
+                            if (Math.random() > 0.7) {
+                                game.powerups.push(new PowerUp(
+                                    game.enemies[j].x,
+                                    game.enemies[j].y,
+                                    Math.random() > 0.5 ? 'health' : 'firepower'
+                                ));
+                            }
+                            game.enemies.splice(j, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // 敌人射弹碰撞
+            for (let i = game.projectiles.length - 1; i >= 0; i--) {
+                if (game.projectiles[i] instanceof EnemyProjectile) {
+                    const dx = game.projectiles[i].x - player.x;
+                    const dy = game.projectiles[i].y - player.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist < player.width/2 + 5) {
+                        game.health--;
+                        game.projectiles.splice(i, 1);
+                        if (game.health <= 0) game.gameOver = true;
+                        break;
+                    }
+                }
+            }
+
+            // 能量包碰撞
+            for (let i = game.powerups.length - 1; i >= 0; i--) {
+                const dx = game.powerups[i].x - player.x;
+                const dy = game.powerups[i].y - player.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < player.width/2 + 10) {
+                    if (game.powerups[i].type === 'health') {
+                        game.health = Math.min(game.health + 1, 5);
+                    } else {
+                        player.firepower = Math.min(player.firepower + 1, 3);
+                    }
+                    game.powerups.splice(i, 1);
+                    game.score += 5;
+                }
+            }
+
+            // 更新粒子
+            for (let i = game.particles.length - 1; i >= 0; i--) {
+                game.particles[i].update();
+                if (game.particles[i].life <= 0) {
+                    game.particles.splice(i, 1);
+                }
+            }
+
+            // 更新能量包
+            for (let i = game.powerups.length - 1; i >= 0; i--) {
+                game.powerups[i].update();
+                if (game.powerups[i].y > canvas.height) {
+                    game.powerups.splice(i, 1);
+                }
+            }
+
+            // 波次系统
+            if (game.enemies.length === 0 && game.time > 150) {
+                game.level++;
+                game.time = 0;
+            }
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 清空画布
+            ctx.fillStyle = 'rgba(13, 27, 42, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制星空背景
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 100; i++) {
+                const x = (game.time * 0.5 + i * 80) % canvas.width;
+                const y = (i * 6) % canvas.height;
+                ctx.fillRect(x, y, 1, 1);
+            }
+
+            // 绘制敌人
+            game.enemies.forEach(e => e.draw());
+
+            // 绘制射弹
+            game.projectiles.forEach(p => p.draw());
+
+            // 绘制能量包
+            game.powerups.forEach(p => p.draw());
+
+            // 绘制粒子
+            game.particles.forEach(p => p.draw());
+
+            // 绘制玩家
+            ctx.fillStyle = '#00ffff';
+            ctx.fillRect(player.x - player.width/2, player.y - player.height/2, player.width, player.height);
+            ctx.strokeStyle = '#00ddff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(player.x - player.width/2, player.y - player.height/2, player.width, player.height);
+
+            // 更新UI
+            document.getElementById('score').textContent = `分数: ${game.score}`;
+            document.getElementById('health').textContent = `生命: ${'❤'.repeat(Math.max(0, game.health))}`;
+            document.getElementById('level').textContent = `波次: ${game.level}`;
+
+            // 显示游戏结束
+            if (game.gameOver) {
+                document.getElementById('finalScore').textContent = `最终分数: ${game.score}`;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
