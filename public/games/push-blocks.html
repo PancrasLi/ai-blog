@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方块推推 - 益智游戏</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        #gameContainer {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        canvas {
+            display: block;
+            background: #f5f5f5;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-play {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+        .btn-play:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+        .message {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            height: 20px;
+        }
+        .success { color: #4caf50; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+<div id="gameContainer">
+    <div class="header">
+        <h1>🎮 方块推推</h1>
+        <div class="stats">
+            <div class="stat-item">
+                <div>关卡</div>
+                <div class="stat-value" id="levelDisplay">1</div>
+            </div>
+            <div class="stat-item">
+                <div>得分</div>
+                <div class="stat-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="stat-item">
+                <div>移动次数</div>
+                <div class="stat-value" id="moveDisplay">0</div>
+            </div>
+        </div>
+    </div>
+    <canvas id="gameCanvas" width="560" height="560"></canvas>
+    <div class="controls">
+        <button class="btn-play" id="startBtn">开始游戏</button>
+        <button class="btn-reset" id="resetBtn">重新开始</button>
+    </div>
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const GRID_SIZE = 70;
+    const COLS = 8;
+    const ROWS = 8;
+    
+    let gameState = {
+        blocks: [],
+        target: { x: -1, y: -1 },
+        level: 1,
+        score: 0,
+        moves: 0,
+        gameActive: false,
+        selectedBlock: null
+    };
+    
+    const levels = [
+        { blocks: [{x:3,y:3,w:2,h:2}], target: {x:6,y:6} },
+        { blocks: [{x:2,y:2,w:2,h:1},{x:5,y:5,w:1,h:2}], target: {x:7,y:7} },
+        { blocks: [{x:1,y:1,w:1,h:3},{x:4,y:4,w:2,h:1},{x:6,y:2,w:1,h:1}], target: {x:7,y:7} },
+        { blocks: [{x:2,y:3,w:2,h:2},{x:5,y:1,w:1,h:2},{x:1,y:6,w:2,h:1}], target: {x:7,y:6} },
+        { blocks: [{x:3,y:2,w:1,h:2},{x:1,y:4,w:3,h:1},{x:5,y:5,w:2,h:2}], target: {x:7,y:7} }
+    ];
+    
+    function initLevel() {
+        const level = levels[(gameState.level - 1) % levels.length];
+        gameState.blocks = JSON.parse(JSON.stringify(level.blocks));
+        gameState.target = { ...level.target };
+        gameState.moves = 0;
+        gameState.selectedBlock = null;
+        updateUI();
+        draw();
+    }
+    
+    function draw() {
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Grid
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= COLS; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * GRID_SIZE, 0);
+            ctx.lineTo(i * GRID_SIZE, canvas.height);
+            ctx.stroke();
+        }
+        for (let i = 0; i <= ROWS; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, i * GRID_SIZE);
+            ctx.lineTo(canvas.width, i * GRID_SIZE);
+            ctx.stroke();
+        }
+        
+        // Target
+        const targetX = gameState.target.x * GRID_SIZE;
+        const targetY = gameState.target.y * GRID_SIZE;
+        ctx.fillStyle = '#ffeb3b';
+        ctx.fillRect(targetX + 5, targetY + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 30px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('★', targetX + GRID_SIZE/2, targetY + GRID_SIZE/2);
+        
+        // Blocks
+        gameState.blocks.forEach((block, idx) => {
+            const isSelected = gameState.selectedBlock === idx;
+            ctx.fillStyle = isSelected ? '#ff6b6b' : ['#667eea', '#764ba2', '#f093fb'][idx % 3];
+            ctx.shadowColor = isSelected ? '#ff6b6b' : 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = isSelected ? 8 : 4;
+            ctx.fillRect(
+                block.x * GRID_SIZE + 3,
+                block.y * GRID_SIZE + 3,
+                block.w * GRID_SIZE - 6,
+                block.h * GRID_SIZE - 6
+            );
+            ctx.shadowColor = 'transparent';
+        });
+    }
+    
+    function getBlockAtPosition(x, y) {
+        const col = Math.floor(x / GRID_SIZE);
+        const row = Math.floor(y / GRID_SIZE);
+        
+        for (let i = 0; i < gameState.blocks.length; i++) {
+            const block = gameState.blocks[i];
+            if (col >= block.x && col < block.x + block.w &&
+                row >= block.y && row < block.y + block.h) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    function moveBlock(idx, dx, dy) {
+        const block = gameState.blocks[idx];
+        const newX = block.x + dx;
+        const newY = block.y + dy;
+        
+        if (newX >= 0 && newX + block.w <= COLS &&
+            newY >= 0 && newY + block.h <= ROWS) {
+            
+            let canMove = true;
+            for (let i = 0; i < gameState.blocks.length; i++) {
+                if (i !== idx) {
+                    if (checkCollision({...block, x: newX, y: newY}, gameState.blocks[i])) {
+                        canMove = false;
+                        break;
+                    }
+                }
+            }
+            
+            if (canMove) {
+                block.x = newX;
+                block.y = newY;
+                gameState.moves++;
+                gameState.score += 10;
+                
+                if (block.x === gameState.target.x && block.y === gameState.target.y) {
+                    levelComplete();
+                } else {
+                    draw();
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    function checkCollision(block1, block2) {
+        return !(block1.x + block1.w <= block2.x || block1.x >= block2.x + block2.w ||
+                 block1.y + block1.h <= block2.y || block1.y >= block2.y + block2.h);
+    }
+    
+    function levelComplete() {
+        gameState.score += 100 - gameState.moves * 2;
+        showMessage('🎉 过关了！', 'success');
+        setTimeout(() => {
+            gameState.level++;
+            initLevel();
+        }, 1500);
+    }
+    
+    function updateUI() {
+        document.getElementById('levelDisplay').textContent = gameState.level;
+        document.getElementById('scoreDisplay').textContent = gameState.score;
+        document.getElementById('moveDisplay').textContent = gameState.moves;
+    }
+    
+    function showMessage(text, className) {
+        const msgEl = document.getElementById('message');
+        msgEl.textContent = text;
+        msgEl.className = className;
+        setTimeout(() => { msgEl.textContent = ''; msgEl.className = ''; }, 2000);
+    }
+    
+    canvas.addEventListener('click', (e) => {
+        if (!gameState.gameActive) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const blockIdx = getBlockAtPosition(x, y);
+        
+        if (blockIdx !== -1) {
+            if (gameState.selectedBlock === blockIdx) {
+                gameState.selectedBlock = null;
+            } else {
+                gameState.selectedBlock = blockIdx;
+            }
+            draw();
+        }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (!gameState.gameActive || gameState.selectedBlock === null) return;
+        
+        const dirs = {
+            'ArrowUp': [0, -1],
+            'ArrowDown': [0, 1],
+            'ArrowLeft': [-1, 0],
+            'ArrowRight': [1, 0],
+            'w': [0, -1],
+            's': [0, 1],
+            'a': [-1, 0],
+            'd': [1, 0]
+        };
+        
+        if (dirs[e.key]) {
+            e.preventDefault();
+            const [dx, dy] = dirs[e.key];
+            moveBlock(gameState.selectedBlock, dx, dy);
+        }
+    });
+    
+    document.getElementById('startBtn').addEventListener('click', () => {
+        gameState.gameActive = true;
+        gameState.level = 1;
+        gameState.score = 0;
+        initLevel();
+        showMessage('使用方向键或WASD移动方块到★', 'warning');
+    });
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        gameState.gameActive = false;
+        gameState.selectedBlock = null;
+        gameState.score = 0;
+        gameState.level = 1;
+        gameState.moves = 0;
+        updateUI();
+        canvas.fillStyle = '#f5f5f5';
+        canvas.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#999';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('点击"开始游戏"开始挑战', canvas.width/2, canvas.height/2);
+    });
+    
+    // Initial render
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#999';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('点击"开始游戏"开始挑战', canvas.width/2, canvas.height/2);
+</script>
+</body>
+</html>
