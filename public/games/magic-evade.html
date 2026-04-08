@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>魔法闪避 - Magic Evade</title>
+<style>
+body{margin:0;padding:0;background:#1a1a2e;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:Arial,sans-serif}
+#gameContainer{width:800px;height:600px;background:linear-gradient(135deg,#0f3460 0%,#16213e 100%);border:3px solid #e94560;position:relative;overflow:hidden;box-shadow:0 0 20px rgba(233,69,96,0.5)}
+canvas{display:block}
+#ui{position:absolute;top:10px;left:10px;color:#00ff88;font-size:16px;z-index:10}
+#score{margin-bottom:10px}
+#level{margin-bottom:10px}
+#health{margin-bottom:10px}
+#gameOver{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);padding:30px;border-radius:10px;text-align:center;color:#fff;z-index:20;display:none}
+#gameOver h1{color:#e94560;margin:0 0 20px 0}
+#gameOver p{margin:10px 0;font-size:18px}
+#gameOver button{background:#e94560;color:#fff;border:none;padding:10px 20px;margin:10px 5px;cursor:pointer;border-radius:5px;font-size:16px}
+#gameOver button:hover{background:#ff6b7a}
+#start{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.95);padding:40px;border-radius:10px;text-align:center;color:#fff;z-index:20}
+#start h1{color:#00ff88;margin:0 0 20px 0;font-size:32px}
+#start p{margin:10px 0;font-size:16px;color:#aaa}
+#start button{background:#00ff88;color:#000;border:none;padding:12px 30px;margin-top:20px;cursor:pointer;border-radius:5px;font-size:18px;font-weight:bold}
+#start button:hover{background:#00ff88;opacity:0.8}
+</style>
+</head>
+<body>
+<div id="gameContainer">
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="ui">
+<div id="score">分数: 0</div>
+<div id="level">关卡: 1</div>
+<div id="health">生命: ❤️❤️❤️</div>
+</div>
+<div id="start">
+<h1>🎮 魔法闪避</h1>
+<p>躲避下落的能量球，生存越久越好！</p>
+<p>🎮 操作：← → 移动 | 空格/点击 暂停</p>
+<p id="difficulty">选择难度：</p>
+<button onclick="startGame('easy')">🟢 简单</button>
+<button onclick="startGame('normal')">🟡 普通</button>
+<button onclick="startGame('hard')">🔴 困难</button>
+</div>
+<div id="gameOver">
+<h1>游戏结束!</h1>
+<p id="finalScore"></p>
+<p id="finalLevel"></p>
+<button onclick="location.reload()">🔄 再玩一次</button>
+</div>
+</body>
+<script>
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const gameOverDiv=document.getElementById('gameOver');
+const startDiv=document.getElementById('start');
+const scoreEl=document.getElementById('score');
+const levelEl=document.getElementById('level');
+const healthEl=document.getElementById('health');
+const finalScoreEl=document.getElementById('finalScore');
+const finalLevelEl=document.getElementById('finalLevel');
+
+let gameRunning=false,gamePaused=false,difficulty='normal';
+let score=0,level=1,health=3,maxHealth=3,survivedTime=0;
+
+const player={x:400,y:550,w:30,h:30,speed:6,color:'#00ff88'};
+const bullets=[],enemies=[];
+let spawnRate=120,spawnCounter=0;
+
+const colors=['#ff006e','#00f5ff','#ffbe0b','#fb5607','#8338ec'];
+const difficulty_settings={
+  easy:{spawnRate:150,enemySpeed:2,enemySize:20},
+  normal:{spawnRate:120,enemySpeed:3,enemySize:18},
+  hard:{spawnRate:80,enemySpeed:4.5,enemySize:16}
+};
+
+function startGame(diff){
+  difficulty=diff;
+  const s=difficulty_settings[diff];
+  spawnRate=s.spawnRate;
+  startDiv.style.display='none';
+  gameRunning=true;
+  score=0;
+  level=1;
+  health=maxHealth;
+  survivedTime=0;
+  enemies.length=0;
+  gameOverDiv.style.display='none';
+  gameLoop();
+}
+
+function spawnEnemy(){
+  const speed=difficulty_settings[difficulty].enemySpeed;
+  const size=difficulty_settings[difficulty].enemySize;
+  enemies.push({
+    x:Math.random()*(canvas.width-size),
+    y:-size,
+    w:size,
+    h:size,
+    speed:speed+level*0.5,
+    color:colors[Math.floor(Math.random()*colors.length)]
+  });
+}
+
+function update(){
+  if(!gameRunning||gamePaused)return;
+
+  survivedTime++;
+  spawnCounter++;
+  if(spawnCounter>=Math.max(60,spawnRate-level*5)){
+    spawnEnemy();
+    spawnCounter=0;
+  }
+
+  const keys=window.keys||{};
+  if(keys['ArrowLeft'])player.x=Math.max(0,player.x-player.speed);
+  if(keys['ArrowRight'])player.x=Math.min(canvas.width-player.w,player.x+player.speed);
+
+  for(let i=enemies.length-1;i>=0;i--){
+    enemies[i].y+=enemies[i].speed;
+    if(enemies[i].y>canvas.height){
+      enemies.splice(i,1);
+      score+=10;
+      continue;
+    }
+    if(checkCollision(player,enemies[i])){
+      health--;
+      enemies.splice(i,1);
+      if(health<=0)endGame();
+      continue;
+    }
+  }
+
+  if(survivedTime>0&&survivedTime%500===0){
+    level++;
+  }
+
+  updateUI();
+}
+
+function checkCollision(a,b){
+  return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+}
+
+function updateUI(){
+  scoreEl.textContent='分数: '+score;
+  levelEl.textContent='关卡: '+level;
+  healthEl.textContent='生命: '+('❤️'.repeat(Math.max(0,health))+' '.repeat(Math.max(0,maxHealth-health)));
+}
+
+function draw(){
+  ctx.fillStyle='rgba(15,52,96,0.1)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle=player.color;
+  ctx.fillRect(player.x,player.y,player.w,player.h);
+  ctx.fillStyle='#00ff88';
+  ctx.fillRect(player.x+5,player.y+5,10,10);
+
+  for(let enemy of enemies){
+    ctx.fillStyle=enemy.color;
+    ctx.beginPath();
+    ctx.arc(enemy.x+enemy.w/2,enemy.y+enemy.h/2,enemy.w/2,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.5)';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+
+  ctx.fillStyle='rgba(0,255,136,0.1)';
+  for(let i=0;i<5;i++){
+    ctx.fillRect(Math.random()*canvas.width,Math.random()*canvas.height,Math.random()*5+1,Math.random()*5+1);
+  }
+}
+
+function endGame(){
+  gameRunning=false;
+  finalScoreEl.textContent='最终分数: '+score;
+  finalLevelEl.textContent='到达关卡: '+level;
+  gameOverDiv.style.display='block';
+}
+
+function gameLoop(){
+  update();
+  draw();
+  if(gameRunning)requestAnimationFrame(gameLoop);
+}
+
+window.keys={};
+window.addEventListener('keydown',e=>{
+  keys[e.key]=true;
+  if(e.key===' '){gamePaused=!gamePaused;e.preventDefault()}
+});
+window.addEventListener('keyup',e=>{keys[e.key]=false});
+canvas.addEventListener('click',()=>{gamePaused=!gamePaused});
+</script>
+</body>
+</html>
