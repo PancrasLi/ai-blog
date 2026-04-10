@@ -240,5 +240,16 @@
     "rating": 4.6,
     "plays": 0,
     "tags": ["快速反应", "收集", "街机", "热游", "TikTok趋势", "Canvas", "2026新游", "简洁有趣", "容易上瘾"]
+  },
+  {
+    "id": "color-ball-match",
+    "title": "🎮 彩球消消乐Plus - AI益智版",
+    "description": "融合AI辅助的创新消除益智游戏！点击相邻的同色彩球消除，在20步内获得最高分数。支持AI智能提示系统，帮助新手寻找最优消除路径。完整的连击倍数系统、渐进难度、流畅的物理动画。考验策略思维和空间想象力。2026年最热门的match-3游戏创意，融合AI元素。支持鼠标点击，UI友好，中文操作指引。",
+    "file": "color-ball-match.html",
+    "category": "puzzle",
+    "difficulty": "medium",
+    "rating": 4.8,
+    "plays": 0,
+    "tags": ["益智", "消消乐", "match-3", "AI提示", "策略", "Canvas", "2026热游", "流畅动画", "容易上手"]
   }
 ]
