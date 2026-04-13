@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 节奏颜色冲击 - Rhythm Wave</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        canvas { 
+            display: block; border: 3px solid #fff; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            background: #1a1a2e;
+        }
+        #info { 
+            position: fixed; top: 10px; left: 10px; color: white; font-size: 14px; z-index: 10;
+            background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px;
+        }
+        .score { font-weight: bold; color: #ffd700; }
+        .combo { color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div>🎯 得分: <span class="score" id="score">0</span></div>
+        <div>🔥 连击: <span class="combo" id="combo">0</span></div>
+        <div>📊 等级: <span id="level">1</span></div>
+        <div style="margin-top: 8px; font-size: 12px; color: #aaa;">
+            点击音乐节奏 | 配对颜色 | 获得加倍分数
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 游戏状态
+        const game = {
+            score: 0, combo: 0, level: 1, playing: true,
+            time: 0, speedMultiplier: 1,
+            colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA500', '#95E1D3', '#F38181'],
+            notes: [], particles: [], comboDots: [],
+            bpm: 120, beatTime: (60/120)*1000
+        };
+
+        class Note {
+            constructor(y, color, rhythmPhase) {
+                this.x = Math.random() * (canvas.width - 40) + 20;
+                this.y = y;
+                this.color = color;
+                this.radius = 15;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = 2 + game.speedMultiplier * 0.5;
+                this.rhythmPhase = rhythmPhase;
+                this.alive = true;
+                this.timeSinceCreation = 0;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.timeSinceCreation++;
+                
+                // 边界反弹
+                if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
+                    this.vx *= -1;
+                    this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
+                }
+
+                // 超出画面下方则死亡
+                if (this.y > canvas.height + 50) this.alive = false;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 发光效果
+                const glow = 10 + Math.sin(game.time * 0.05) * 5;
+                ctx.strokeStyle = this.color + '80';
+                ctx.lineWidth = glow / this.radius;
+                ctx.stroke();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.life = 1;
+                this.decay = Math.random() * 0.02 + 0.02;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1; // 重力
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color + Math.floor(this.life * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class ComboDot {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.life = 1;
+            }
+
+            update() {
+                this.y -= 2;
+                this.life -= 0.03;
+            }
+
+            draw() {
+                ctx.font = 'bold 20px Arial';
+                ctx.fillStyle = '#FFD700' + Math.floor(this.life * 255).toString(16).padStart(2, '0');
+                ctx.fillText('+', this.x, this.y);
+            }
+        }
+
+        function generateBeat() {
+            if (game.playing) {
+                const baseY = -30;
+                for (let i = 0; i < 2; i++) {
+                    const color = game.colors[Math.floor(Math.random() * game.colors.length)];
+                    game.notes.push(new Note(baseY, color, game.time));
+                }
+            }
+        }
+
+        function updateGame() {
+            game.time++;
+
+            // 节奏生成
+            if (game.time % Math.max(20, Math.floor(80 / game.speedMultiplier)) === 0) {
+                generateBeat();
+            }
+
+            // 更新音符
+            game.notes = game.notes.filter(n => {
+                n.update();
+                return n.alive;
+            });
+
+            // 更新粒子
+            game.particles = game.particles.filter(p => {
+                p.update();
+                return p.life > 0;
+            });
+
+            // 更新combo指示
+            game.comboDots = game.comboDots.filter(cd => {
+                cd.update();
+                return cd.life > 0;
+            });
+
+            // 提升难度
+            game.level = Math.floor(game.score / 500) + 1;
+            game.speedMultiplier = 1 + (game.level - 1) * 0.15;
+        }
+
+        function drawGame() {
+            // 背景
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#0f0f1e');
+            gradient.addColorStop(1, '#1a1a2e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 网格背景
+            ctx.strokeStyle = 'rgba(100, 100, 200, 0.1)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            // 绘制音符
+            game.notes.forEach(n => n.draw());
+
+            // 绘制粒子
+            game.particles.forEach(p => p.draw());
+
+            // 绘制combo指示
+            game.comboDots.forEach(cd => cd.draw());
+
+            // 底部击打区域
+            ctx.fillStyle = 'rgba(100, 200, 255, 0.2)';
+            ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, canvas.height - 80, canvas.width, 80);
+
+            // 指示文字
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('击打区域', canvas.width / 2, canvas.height - 20);
+        }
+
+        function checkHits(x, y) {
+            let hitCount = 0;
+            const hitRadius = 60;
+
+            game.notes = game.notes.filter(n => {
+                const dist = Math.sqrt((n.x - x) ** 2 + (n.y - y) ** 2);
+                if (dist < hitRadius) {
+                    // 命中！
+                    game.score += 10 * (game.combo + 1);
+                    game.combo++;
+                    
+                    // 生成粒子
+                    for (let i = 0; i < 8; i++) {
+                        game.particles.push(new Particle(n.x, n.y, n.color));
+                    }
+
+                    // combo指示
+                    game.comboDots.push(new ComboDot(x, y));
+                    
+                    hitCount++;
+                    return false;
+                }
+                return true;
+            });
+
+            if (hitCount === 0) game.combo = 0;
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = game.score;
+            document.getElementById('combo').textContent = game.combo;
+            document.getElementById('level').textContent = game.level;
+        }
+
+        // 事件监听
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 只在底部击打区域计分
+            if (y > canvas.height - 80) {
+                checkHits(x, y);
+            }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            if (y > canvas.height - 80) {
+                checkHits(x, y);
+            }
+        });
+
+        document.addEventListener('keypress', (e) => {
+            if (e.code === 'Space') {
+                checkHits(canvas.width / 2, canvas.height - 40);
+            }
+        });
+
+        // 游戏循环
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
