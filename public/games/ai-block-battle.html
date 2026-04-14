@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI方块大战</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .gameArea {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .player, .ai {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .player { border-color: #667eea; }
+        .ai { border-color: #764ba2; }
+        .playerName {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        canvas {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .stats {
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .stat {
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        #startBtn {
+            background: #667eea;
+            color: white;
+        }
+        #startBtn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        #resetBtn {
+            background: #e74c3c;
+            color: white;
+        }
+        #resetBtn:hover {
+            background: #c0392b;
+        }
+        .gameOver {
+            text-align: center;
+            padding: 20px;
+            background: #ffffcc;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .gameOver.show {
+            display: block;
+        }
+        .gameOver h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>🎮 AI方块大战</h1>
+        
+        <div class="gameArea">
+            <div class="player">
+                <div class="playerName">👤 玩家</div>
+                <canvas id="playerCanvas" width="300" height="300"></canvas>
+                <div class="stats">
+                    <span class="stat">得分: <span id="playerScore">0</span></span>
+                    <span class="stat">消除: <span id="playerCleared">0</span></span>
+                </div>
+            </div>
+            
+            <div class="ai">
+                <div class="playerName">🤖 AI对手</div>
+                <canvas id="aiCanvas" width="300" height="300"></canvas>
+                <div class="stats">
+                    <span class="stat">得分: <span id="aiScore">0</span></span>
+                    <span class="stat">消除: <span id="aiCleared">0</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">开始游戏</button>
+            <button id="resetBtn">重新开始</button>
+        </div>
+        
+        <div id="gameOverMsg" class="gameOver">
+            <h2 id="gameOverText"></h2>
+        </div>
+    </div>
+
+    <script>
+        // 游戏配置
+        const GRID_SIZE = 5;
+        const BLOCK_SIZE = 60;
+        const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#C7CEEA'];
+
+        class GameBoard {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.grid = this.createGrid();
+                this.score = 0;
+                this.cleared = 0;
+            }
+
+            createGrid() {
+                return Array(GRID_SIZE).fill().map(() =>
+                    Array(GRID_SIZE).fill().map(() => Math.floor(Math.random() * COLORS.length))
+                );
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#f9f9f9';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const x = col * BLOCK_SIZE;
+                        const y = row * BLOCK_SIZE;
+                        const colorIdx = this.grid[row][col];
+
+                        if (colorIdx !== -1) {
+                            this.ctx.fillStyle = COLORS[colorIdx];
+                            this.ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+                            this.ctx.strokeStyle = '#fff';
+                            this.ctx.lineWidth = 2;
+                            this.ctx.strokeRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+                        }
+                    }
+                }
+            }
+
+            removeBlocks(row, col) {
+                const targetColor = this.grid[row][col];
+                const toRemove = new Set();
+                this.flood(row, col, targetColor, toRemove);
+
+                if (toRemove.size >= 3) {
+                    toRemove.forEach(pos => {
+                        const [r, c] = pos.split(',').map(Number);
+                        this.grid[r][c] = -1;
+                    });
+                    this.score += toRemove.size * 10;
+                    this.cleared += toRemove.size;
+                    this.gravity();
+                    this.draw();
+                    return true;
+                }
+                return false;
+            }
+
+            flood(row, col, targetColor, visited) {
+                if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return;
+                if (this.grid[row][col] !== targetColor) return;
+
+                const key = `${row},${col}`;
+                if (visited.has(key)) return;
+
+                visited.add(key);
+                this.flood(row + 1, col, targetColor, visited);
+                this.flood(row - 1, col, targetColor, visited);
+                this.flood(row, col + 1, targetColor, visited);
+                this.flood(row, col - 1, targetColor, visited);
+            }
+
+            gravity() {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    let writePos = GRID_SIZE - 1;
+                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                        if (this.grid[row][col] !== -1) {
+                            this.grid[writePos][col] = this.grid[row][col];
+                            if (writePos !== row) this.grid[row][col] = -1;
+                            writePos--;
+                        }
+                    }
+                }
+            }
+
+            smartMove() {
+                let bestScore = 0;
+                let bestMove = null;
+
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        if (this.grid[row][col] !== -1) {
+                            const oldGrid = JSON.parse(JSON.stringify(this.grid));
+                            const targetColor = this.grid[row][col];
+                            const toRemove = new Set();
+                            this.flood(row, col, targetColor, toRemove);
+
+                            if (toRemove.size >= 3 && toRemove.size > bestScore) {
+                                bestScore = toRemove.size;
+                                bestMove = { row, col };
+                            }
+                            this.grid = oldGrid;
+                        }
+                    }
+                }
+
+                if (bestMove) {
+                    this.removeBlocks(bestMove.row, bestMove.col);
+                }
+            }
+        }
+
+        // 初始化游戏
+        const playerBoard = new GameBoard('playerCanvas');
+        const aiBoard = new GameBoard('aiCanvas');
+        let gameActive = false;
+        let gameOver = false;
+
+        playerBoard.draw();
+        aiBoard.draw();
+
+        // 事件监听
+        document.getElementById('playerCanvas').addEventListener('click', (e) => {
+            if (!gameActive || gameOver) return;
+            const rect = playerBoard.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const col = Math.floor(x / BLOCK_SIZE);
+            const row = Math.floor(y / BLOCK_SIZE);
+
+            if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+                playerBoard.removeBlocks(row, col);
+                updateUI();
+                setTimeout(() => {
+                    if (gameActive && !gameOver) {
+                        aiBoard.smartMove();
+                        updateUI();
+                        checkGameEnd();
+                    }
+                }, 800);
+            }
+        });
+
+        function updateUI() {
+            document.getElementById('playerScore').textContent = playerBoard.score;
+            document.getElementById('playerCleared').textContent = playerBoard.cleared;
+            document.getElementById('aiScore').textContent = aiBoard.score;
+            document.getElementById('aiCleared').textContent = aiBoard.cleared;
+        }
+
+        function checkGameEnd() {
+            if (playerBoard.cleared >= 15 || aiBoard.cleared >= 15) {
+                gameActive = false;
+                gameOver = true;
+                const msg = document.getElementById('gameOverMsg');
+                const winner = playerBoard.score > aiBoard.score ? '🎉 恭喜！你赢了！' : 
+                              playerBoard.score < aiBoard.score ? '😢 AI赢了，再来一局!' : '🤝 平手！';
+                document.getElementById('gameOverText').textContent = winner;
+                msg.classList.add('show');
+            }
+        }
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            playerBoard.grid = playerBoard.createGrid();
+            aiBoard.grid = aiBoard.createGrid();
+            playerBoard.score = aiBoard.score = 0;
+            playerBoard.cleared = aiBoard.cleared = 0;
+            gameActive = true;
+            gameOver = false;
+            document.getElementById('gameOverMsg').classList.remove('show');
+            playerBoard.draw();
+            aiBoard.draw();
+            updateUI();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            gameActive = false;
+            gameOver = false;
+            document.getElementById('gameOverMsg').classList.remove('show');
+        });
+    </script>
+</body>
+</html>
