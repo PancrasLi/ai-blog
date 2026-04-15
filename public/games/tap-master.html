@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反应巨星 - Tap Master</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Arial', sans-serif; }
+        canvas { border: 3px solid #fff; border-radius: 10px; background: #1a1a2e; display: block; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .controls { position: absolute; bottom: 20px; color: white; text-align: center; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="controls">按下空格键或点击方块开始 | 按SPACE/方向键或点击响应 | ESC重置</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 游戏状态
+        const gameState = {
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            level: 1,
+            lives: 3,
+            gameRunning: false,
+            gameOver: false,
+            time: 0,
+            maxTime: 60,
+        };
+
+        // 游戏对象
+        const tapZones = [
+            { x: 150, y: 150, size: 80, color: '#FF6B6B', key: ' ' },
+            { x: 550, y: 150, size: 80, color: '#4ECDC4', key: ' ' },
+            { x: 150, y: 450, size: 80, color: '#45B7D1', key: ' ' },
+            { x: 550, y: 450, size: 80, color: '#FFA07A', key: ' ' }
+        ];
+
+        let activeZones = [];
+        let particles = [];
+        let comboText = [];
+        let keyStates = {};
+
+        // 初始化
+        function init() {
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.level = 1;
+            gameState.lives = 3;
+            gameState.gameRunning = false;
+            gameState.gameOver = false;
+            gameState.time = 0;
+            activeZones = [];
+            particles = [];
+            comboText = [];
+        }
+
+        // 生成AI模式
+        function generateAIPattern() {
+            const pattern = [];
+            const patternLength = 3 + gameState.level;
+            for (let i = 0; i < patternLength; i++) {
+                pattern.push(Math.floor(Math.random() * tapZones.length));
+            }
+            return pattern;
+        }
+
+        let aiPattern = [];
+        let patternIndex = 0;
+        let patternTimer = 0;
+
+        // 启动新一轮AI模式
+        function startNewPattern() {
+            aiPattern = generateAIPattern();
+            patternIndex = 0;
+            patternTimer = 0;
+        }
+
+        // 显示AI激活的区域
+        function activateZone(index) {
+            activeZones.push({
+                zone: index,
+                timer: 0.3,
+                originalSize: tapZones[index].size
+            });
+        }
+
+        // 检查点击区域
+        function checkTap(x, y) {
+            for (let i = 0; i < tapZones.length; i++) {
+                const zone = tapZones[i];
+                const dx = x - zone.x;
+                const dy = y - zone.y;
+                if (dx * dx + dy * dy <= zone.size * zone.size) {
+                    handleCorrectTap(i);
+                    return true;
+                }
+            }
+            handleMissTap();
+            return false;
+        }
+
+        // 正确的点击
+        function handleCorrectTap(zoneIndex) {
+            gameState.score += 10 * (gameState.combo + 1);
+            gameState.combo++;
+            if (gameState.combo > gameState.maxCombo) {
+                gameState.maxCombo = gameState.combo;
+            }
+
+            // 创建粒子效果
+            createParticles(tapZones[zoneIndex].x, tapZones[zoneIndex].y, tapZones[zoneIndex].color);
+            
+            // 添加连击文字
+            comboText.push({
+                x: tapZones[zoneIndex].x,
+                y: tapZones[zoneIndex].y - 50,
+                text: 'PERFECT!',
+                life: 0.8,
+                size: 20
+            });
+
+            // 播放音效反馈（虽然没有真实音效，但可以用视觉反馈代替）
+            activateZone(zoneIndex);
+        }
+
+        // 错误点击
+        function handleMissTap() {
+            gameState.lives--;
+            gameState.combo = 0;
+            
+            comboText.push({
+                x: 400,
+                y: 300,
+                text: 'MISS!',
+                life: 0.6,
+                size: 30,
+                color: '#FF6B6B'
+            });
+
+            if (gameState.lives <= 0) {
+                gameState.gameOver = true;
+                gameState.gameRunning = false;
+            }
+        }
+
+        // 创建粒子效果
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                const angle = (Math.PI * 2 * i) / 15;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * 5,
+                    vy: Math.sin(angle) * 5,
+                    life: 0.6,
+                    color: color,
+                    size: 4
+                });
+            }
+        }
+
+        // 更新游戏状态
+        function update(deltaTime) {
+            if (!gameState.gameRunning && !gameState.gameOver) return;
+
+            if (gameState.gameRunning) {
+                gameState.time += deltaTime;
+                if (gameState.time > gameState.maxTime) {
+                    gameState.gameRunning = false;
+                }
+
+                // AI模式生成
+                patternTimer += deltaTime;
+                const speed = 0.8 - gameState.level * 0.05;
+                if (patternTimer > speed && patternIndex < aiPattern.length) {
+                    activateZone(aiPattern[patternIndex]);
+                    patternIndex++;
+                    patternTimer = 0;
+                }
+
+                // 如果模式完成，生成新模式
+                if (patternIndex >= aiPattern.length) {
+                    startNewPattern();
+                }
+            }
+
+            // 更新激活区域
+            activeZones = activeZones.filter(az => {
+                az.timer -= deltaTime;
+                return az.timer > 0;
+            });
+
+            // 更新粒子
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // 重力
+                p.life -= deltaTime;
+                return p.life > 0;
+            });
+
+            // 更新连击文字
+            comboText = comboText.filter(ct => {
+                ct.life -= deltaTime;
+                ct.y -= 50 * deltaTime;
+                return ct.life > 0;
+            });
+
+            // 更新等级
+            if (gameState.score >= gameState.level * 200) {
+                gameState.level++;
+            }
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 清空画布
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!gameState.gameRunning && !gameState.gameOver) {
+                drawStartScreen();
+            } else if (gameState.gameRunning) {
+                drawGameScreen();
+            } else if (gameState.gameOver) {
+                drawGameOverScreen();
+            }
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('反应巨星', canvas.width / 2, 150);
+
+            ctx.font = '30px Arial';
+            ctx.fillStyle = '#4ECDC4';
+            ctx.fillText('Tap Master', canvas.width / 2, 200);
+
+            ctx.font = '20px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText('跟随节奏点击方块', canvas.width / 2, 280);
+            ctx.fillText('获得连击加倍分数', canvas.width / 2, 320);
+            ctx.fillText('难度会不断提升', canvas.width / 2, 360);
+
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText('按 SPACE 开始', canvas.width / 2, 480);
+
+            // 绘制示范方块
+            drawTapZones();
+        }
+
+        function drawGameScreen() {
+            // 绘制背景网格
+            ctx.strokeStyle = 'rgba(100, 150, 200, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // 绘制区域
+            drawTapZones();
+
+            // 绘制激活效果
+            for (const az of activeZones) {
+                const zone = tapZones[az.zone];
+                const progress = 1 - az.timer / 0.3;
+                ctx.fillStyle = zone.color;
+                ctx.globalAlpha = 0.6 - progress * 0.5;
+                ctx.beginPath();
+                ctx.arc(zone.x, zone.y, zone.size + progress * 30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            // 绘制粒子
+            for (const p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            // 绘制连击文字
+            for (const ct of comboText) {
+                ctx.font = `bold ${ct.size}px Arial`;
+                ctx.fillStyle = ct.color || '#FFD700';
+                ctx.globalAlpha = Math.max(0, ct.life);
+                ctx.textAlign = 'center';
+                ctx.fillText(ct.text, ct.x, ct.y);
+                ctx.globalAlpha = 1;
+            }
+
+            // 绘制HUD
+            drawHUD();
+        }
+
+        function drawTapZones() {
+            for (const zone of tapZones) {
+                ctx.fillStyle = zone.color;
+                ctx.globalAlpha = 0.7;
+                ctx.beginPath();
+                ctx.arc(zone.x, zone.y, zone.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // 边框
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(zone.x, zone.y, zone.size, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        function drawHUD() {
+            const padding = 20;
+            const lineHeight = 40;
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 28px Arial';
+            ctx.textAlign = 'left';
+            
+            ctx.fillText(`得分: ${gameState.score}`, padding, padding + lineHeight);
+            ctx.fillText(`连击: ${gameState.combo}x`, padding, padding + lineHeight * 2);
+            ctx.fillText(`等级: ${gameState.level}`, padding, padding + lineHeight * 3);
+            
+            // 生命值
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillText(`❤ ${gameState.lives}`, canvas.width - padding, padding + lineHeight);
+            
+            // 时间进度
+            ctx.fillStyle = '#4ECDC4';
+            ctx.fillText(`时间: ${Math.ceil(gameState.time)}s`, canvas.width - padding, padding + lineHeight * 2);
+            
+            // 进度条
+            const barWidth = canvas.width - padding * 2;
+            const barHeight = 10;
+            const progress = gameState.time / gameState.maxTime;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(padding, canvas.height - padding - barHeight, barWidth, barHeight);
+            
+            ctx.fillStyle = '#4ECDC4';
+            ctx.fillRect(padding, canvas.height - padding - barHeight, barWidth * progress, barHeight);
+        }
+
+        function drawGameOverScreen() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FF6B6B';
+            ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('游戏结束', canvas.width / 2, 150);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '32px Arial';
+            ctx.fillText(`最终得分: ${gameState.score}`, canvas.width / 2, 250);
+            ctx.fillText(`最高连击: ${gameState.maxCombo}x`, canvas.width / 2, 310);
+            ctx.fillText(`到达等级: ${gameState.level}`, canvas.width / 2, 370);
+
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText('按 SPACE 重新开始', canvas.width / 2, 480);
+
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#999';
+            ctx.fillText('或按 ESC 返回菜单', canvas.width / 2, 520);
+        }
+
+        // 事件监听
+        document.addEventListener('keydown', (e) => {
+            keyStates[e.key] = true;
+
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                if (!gameState.gameRunning && !gameState.gameOver) {
+                    gameState.gameRunning = true;
+                    startNewPattern();
+                } else if (gameState.gameOver) {
+                    init();
+                }
+            }
+
+            if (e.key === 'Escape') {
+                init();
+            }
+
+            // 方向键响应
+            if (e.key === 'ArrowUp') {
+                checkTap(tapZones[0].x, tapZones[0].y);
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                checkTap(tapZones[1].x, tapZones[1].y);
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                checkTap(tapZones[2].x, tapZones[2].y);
+                e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                checkTap(tapZones[3].x, tapZones[3].y);
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keyStates[e.key] = false;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (gameState.gameRunning) {
+                checkTap(x, y);
+            } else if (!gameState.gameOver) {
+                gameState.gameRunning = true;
+                startNewPattern();
+            } else {
+                init();
+            }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            if (gameState.gameRunning) {
+                checkTap(x, y);
+            } else if (!gameState.gameOver) {
+                gameState.gameRunning = true;
+                startNewPattern();
+            } else {
+                init();
+            }
+
+            e.preventDefault();
+        });
+
+        // 主游戏循环
+        let lastTime = Date.now();
+        function gameLoop() {
+            const currentTime = Date.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            update(deltaTime);
+            draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        init();
+        gameLoop();
+    </script>
+</body>
+</html>
