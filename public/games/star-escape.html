@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星际逃脱 - Star Escape</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: #000; overflow: hidden; }
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        canvas { display: block; background: #001a33; border: 3px solid #00ccff; box-shadow: 0 0 15px rgba(0, 204, 255, 0.6); }
+        .ui-panel { position: absolute; top: 15px; left: 15px; color: #00ccff; font-size: 13px; z-index: 10; font-weight: bold; }
+        .ui-panel div { margin: 4px 0; }
+        .score { color: #ffff00; font-size: 16px; }
+        .combo { color: #ff00ff; }
+        .best { color: #00ff00; }
+        .controls { position: absolute; bottom: 15px; color: #666; font-size: 11px; }
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 26, 51, 0.96); border: 2px solid #00ccff; padding: 25px; border-radius: 8px; text-align: center; z-index: 100; }
+        .modal h1 { color: #00ccff; margin-bottom: 12px; font-size: 24px; }
+        .modal p { color: #aaa; margin: 8px 0; font-size: 13px; }
+        .modal button { background: #00ccff; color: #000; border: none; padding: 8px 16px; margin-top: 15px; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 12px; }
+        .modal button:hover { background: #00ffff; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ui-panel">
+            <div>⭐ 积分: <span class="score" id="score">0</span></div>
+            <div>🔥 连击: <span class="combo" id="combo">0</span></div>
+            <div>🏆 最高: <span class="best" id="best">0</span></div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div class="controls">
+            <p>⬅️➡️ 移动 或 鼠标移动 | 碰撞黄星+10分，红星-20分</p>
+        </div>
+    </div>
+
+    <div id="startModal" class="modal">
+        <h1>⭐ 星际逃脱</h1>
+        <p>收集黄星躲避红星</p>
+        <p>获得连击奖励，挑战高分！</p>
+        <button onclick="startGame()">开始游戏</button>
+    </div>
+
+    <div id="gameOverModal" class="modal hidden">
+        <h1>⚠️ 游戏结束</h1>
+        <p>最终积分: <span id="finalScore">0</span></p>
+        <p>最高连击: <span id="finalCombo">0</span></p>
+        <button onclick="location.reload()">再来一局</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameState = {
+            running: false,
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            bestScore: parseInt(localStorage.getItem('starEscapeBest')) || 0,
+            gameTime: 0,
+            lives: 3,
+        };
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            radius: 12,
+            vx: 0,
+            speed: 6,
+        };
+
+        let stars = [];
+        let particles = [];
+        let mouseX = canvas.width / 2;
+
+        // Input handling
+        const keys = {};
+        window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+        });
+
+        function startGame() {
+            document.getElementById('startModal').classList.add('hidden');
+            gameState.running = true;
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.lives = 3;
+            gameState.gameTime = 0;
+            stars = [];
+            particles = [];
+            spawnStar();
+            gameLoop();
+        }
+
+        function spawnStar() {
+            const type = Math.random() < 0.7 ? 'good' : 'bad';
+            stars.push({
+                x: Math.random() * (canvas.width - 20) + 10,
+                y: -15,
+                radius: 8,
+                vy: 2 + gameState.gameTime * 0.001,
+                type: type,
+            });
+        }
+
+        function createParticles(x, y, color, count = 6) {
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * 3,
+                    vy: Math.sin(angle) * 3,
+                    life: 20,
+                    color: color,
+                });
+            }
+        }
+
+        function update() {
+            if (!gameState.running) return;
+
+            gameState.gameTime++;
+
+            // Player movement
+            player.vx = 0;
+            if (keys['arrowleft'] || keys['a']) player.vx = -player.speed;
+            if (keys['arrowright'] || keys['d']) player.vx = player.speed;
+            
+            // Mouse control (alternative)
+            const diff = mouseX - player.x;
+            if (Math.abs(diff) > 2) {
+                player.vx = Math.sign(diff) * Math.min(player.speed, Math.abs(diff) / 10);
+            }
+            
+            player.x += player.vx;
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+
+            // Spawn stars
+            if (gameState.gameTime % Math.max(25, 50 - gameState.score / 500) === 0) {
+                spawnStar();
+            }
+
+            // Update stars
+            for (let i = stars.length - 1; i >= 0; i--) {
+                stars[i].y += stars[i].vy;
+
+                // Collision with player
+                const dist = Math.hypot(stars[i].x - player.x, stars[i].y - player.y);
+                if (dist < player.radius + stars[i].radius) {
+                    if (stars[i].type === 'good') {
+                        gameState.score += 10 + gameState.combo * 2;
+                        gameState.combo++;
+                        gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+                        createParticles(stars[i].x, stars[i].y, '#ffff00', 8);
+                    } else {
+                        gameState.score = Math.max(0, gameState.score - 20);
+                        gameState.combo = 0;
+                        gameState.lives--;
+                        createParticles(stars[i].x, stars[i].y, '#ff4444', 10);
+                    }
+                    stars.splice(i, 1);
+                } else if (stars[i].y > canvas.height) {
+                    stars.splice(i, 1);
+                }
+            }
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].x += particles[i].vx;
+                particles[i].y += particles[i].vy;
+                particles[i].vy += 0.15;
+                particles[i].life--;
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Game over
+            if (gameState.lives <= 0) {
+                gameState.running = false;
+                localStorage.setItem('starEscapeBest', Math.max(gameState.bestScore, gameState.score));
+                endGame();
+            }
+
+            // Update UI
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('combo').textContent = gameState.combo;
+            document.getElementById('best').textContent = Math.max(gameState.bestScore, gameState.score);
+        }
+
+        function draw() {
+            // Background
+            ctx.fillStyle = '#001a33';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Scrolling stars
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+            for (let i = 0; i < 15; i++) {
+                const x = (i * 60) % canvas.width;
+                const y = (gameState.gameTime * 1.5 + i * 33) % canvas.height;
+                ctx.beginPath();
+                ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw stars
+            stars.forEach(s => {
+                ctx.fillStyle = s.type === 'good' ? '#ffff00' : '#ff4444';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Star outline
+                ctx.strokeStyle = s.type === 'good' ? '#ffff00' : '#ff0000';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+                    const next = ((i + 1) / 5) * Math.PI * 2 - Math.PI / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(s.x + Math.cos(angle) * s.radius, s.y + Math.sin(angle) * s.radius);
+                    ctx.lineTo(s.x + Math.cos((angle + next) / 2) * s.radius * 0.5, s.y + Math.sin((angle + next) / 2) * s.radius * 0.5);
+                    ctx.stroke();
+                }
+            });
+
+            // Draw player
+            ctx.fillStyle = '#00ccff';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius + 4, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 20;
+                ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+                ctx.globalAlpha = 1;
+            });
+
+            // Draw lives
+            ctx.fillStyle = '#ff6666';
+            ctx.font = 'bold 14px Arial';
+            for (let i = 0; i < gameState.lives; i++) {
+                ctx.fillText('❤', canvas.width - 40 - i * 20, 30);
+            }
+
+            // Draw combo indicator
+            if (gameState.combo > 0) {
+                ctx.fillStyle = `rgba(255, 0, 255, ${0.3 + Math.sin(gameState.gameTime / 5) * 0.2})`;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${gameState.combo}x`, player.x, player.y - 25);
+            }
+        }
+
+        function endGame() {
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalCombo').textContent = gameState.maxCombo;
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (gameState.running) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+    </script>
+</body>
+</html>
