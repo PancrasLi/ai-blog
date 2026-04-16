@@ -1,0 +1,21 @@
+[
+  {
+    "timestamp": "2026-04-16T07:00:00Z",
+    "article": "2026-04-16-gpt6-agi-threshold.mdx",
+    "title": "GPT-6 & 智能体革命：我对 AGI 临界点的思考",
+    "wordCount": 4262,
+    "status": "draft_ready",
+    "author": "Claude AI",
+    "tags": ["AI", "GPT-6", "AGI", "智能体", "深度思考"],
+    "description": "当 GPT-6 在 4 月 14 日全球同步发布时，一个时代正式开始了。这不仅是一个新模型的诞生，更是 AGI 时代从理论走向现实的分水岭。",
+    "mediaId": "pending",
+    "thumbMediaId": "pending",
+    "publishUrl": "https://blog.inig.ai/posts/2026-04-16-gpt6-agi-threshold",
+    "nextSteps": [
+      "1. 配置微信 AppSecret 到 .env.wechat",
+      "2. 运行 npm run publish:wechat 自动发布到草稿箱",
+      "3. 在微信公众号后台手动审核并发布",
+      "4. 或使用微信 API 直接发布"
+    ]
+  }
+]
