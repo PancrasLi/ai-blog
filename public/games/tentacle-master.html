@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>触手大师 - Tentacle Master</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            position: relative;
+            width: 900px;
+            background: rgba(20, 20, 40, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(100, 150, 200, 0.2);
+            border-radius: 8px;
+        }
+        .header h1 {
+            color: #4ade80;
+            font-size: 24px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .stats {
+            color: #60a5fa;
+            font-size: 14px;
+        }
+        .stats div {
+            margin: 2px 0;
+        }
+        canvas {
+            display: block;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%);
+            border: 3px solid #4ade80;
+            border-radius: 8px;
+            margin: 0 auto 15px;
+            cursor: crosshair;
+        }
+        .controls {
+            text-align: center;
+            color: #60a5fa;
+            font-size: 13px;
+            line-height: 1.6;
+            background: rgba(100, 100, 150, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 2px solid #4ade80;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: scale(1.05);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .message {
+            text-align: center;
+            color: #4ade80;
+            font-size: 14px;
+            height: 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐙 触手大师</h1>
+            <div class="stats">
+                <div>Level: <span id="level">1</span></div>
+                <div>Score: <span id="score">0</span></div>
+                <div>Combo: <span id="combo">0x</span></div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="860" height="600"></canvas>
+        
+        <div class="controls">
+            🖱️ <strong>鼠标移动</strong>控制触手 | 
+            <strong>左键点击</strong>推动物体 | 
+            <strong>右键长按</strong>伸长触手 |
+            收集所有<span style="color:#ffeb3b">⭐星星</span>完成关卡
+        </div>
+        
+        <div class="buttons">
+            <button onclick="gameInstance.togglePause()">暂停/继续</button>
+            <button onclick="gameInstance.nextLevel()">下一关</button>
+            <button onclick="location.reload()">重新开始</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.score = 0;
+                this.level = 1;
+                this.combo = 0;
+                this.isPaused = false;
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.isRightMouseDown = false;
+                this.tentacles = [];
+                this.objects = [];
+                this.stars = [];
+                this.particles = [];
+                this.gameState = 'playing';
+                
+                this.canvas.addEventListener('mousemove', e => this.onMouseMove(e));
+                this.canvas.addEventListener('mousedown', e => this.onMouseDown(e));
+                this.canvas.addEventListener('mouseup', e => this.onMouseUp(e));
+                this.canvas.addEventListener('contextmenu', e => e.preventDefault());
+                
+                this.initLevel();
+                this.animate();
+            }
+            
+            initLevel() {
+                this.objects = [];
+                this.stars = [];
+                this.particles = [];
+                this.combo = 0;
+                
+                // 初始化触手
+                this.tentacles = [];
+                for (let i = 0; i < 8; i++) {
+                    this.tentacles.push({
+                        segments: 5,
+                        angle: (Math.PI * 2 / 8) * i,
+                        length: 0,
+                        targetLength: 0
+                    });
+                }
+                
+                // 根据关卡生成不同的星星数量和位置
+                const starCount = Math.min(3 + this.level, 8);
+                for (let i = 0; i < starCount; i++) {
+                    this.stars.push({
+                        x: Math.random() * (this.canvas.width - 100) + 50,
+                        y: Math.random() * (this.canvas.height - 150) + 50,
+                        collected: false,
+                        size: 15,
+                        rotation: 0
+                    });
+                }
+                
+                // 生成障碍物
+                const blockCount = Math.floor(this.level * 1.5);
+                for (let i = 0; i < blockCount; i++) {
+                    this.objects.push({
+                        x: Math.random() * (this.canvas.width - 100) + 50,
+                        y: Math.random() * (this.canvas.height - 150) + 100,
+                        vx: 0,
+                        vy: 0,
+                        size: 20,
+                        type: 'block'
+                    });
+                }
+            }
+            
+            onMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = e.clientX - rect.left;
+                this.mouseY = e.clientY - rect.top;
+            }
+            
+            onMouseDown(e) {
+                if (e.button === 2) {
+                    this.isRightMouseDown = true;
+                } else {
+                    // 左键点击 - 推动物体
+                    for (let obj of this.objects) {
+                        const dist = Math.hypot(this.mouseX - obj.x, this.mouseY - obj.y);
+                        if (dist < 50) {
+                            const angle = Math.atan2(obj.y - this.mouseY, obj.x - this.mouseX);
+                            obj.vx = Math.cos(angle) * 8;
+                            obj.vy = Math.sin(angle) * 8;
+                            this.createParticles(this.mouseX, this.mouseY, '#4ade80');
+                        }
+                    }
+                }
+            }
+            
+            onMouseUp(e) {
+                if (e.button === 2) {
+                    this.isRightMouseDown = false;
+                }
+            }
+            
+            update() {
+                if (this.isPaused) return;
+                
+                // 更新触手
+                for (let tentacle of this.tentacles) {
+                    tentacle.targetLength = this.isRightMouseDown ? 200 : 60;
+                    tentacle.length += (tentacle.targetLength - tentacle.length) * 0.15;
+                }
+                
+                // 更新物体
+                for (let obj of this.objects) {
+                    obj.x += obj.vx;
+                    obj.y += obj.vy;
+                    obj.vx *= 0.95;
+                    obj.vy *= 0.95;
+                    
+                    // 边界碰撞
+                    if (obj.x - obj.size < 0 || obj.x + obj.size > this.canvas.width) {
+                        obj.vx *= -0.8;
+                        obj.x = Math.max(obj.size, Math.min(this.canvas.width - obj.size, obj.x));
+                    }
+                    if (obj.y - obj.size < 0 || obj.y + obj.size > this.canvas.height) {
+                        obj.vy *= -0.8;
+                        obj.y = Math.max(obj.size, Math.min(this.canvas.height - obj.size, obj.y));
+                    }
+                }
+                
+                // 检查星星收集
+                for (let star of this.stars) {
+                    if (!star.collected) {
+                        const dist = Math.hypot(this.mouseX - star.x, this.mouseY - star.y);
+                        if (dist < 50) {
+                            star.collected = true;
+                            this.score += 100 * (this.level + this.combo);
+                            this.combo++;
+                            this.createParticles(star.x, star.y, '#ffeb3b');
+                            this.playSound();
+                        }
+                    }
+                    star.rotation += 0.05;
+                }
+                
+                // 检查关卡完成
+                const allCollected = this.stars.every(s => s.collected);
+                if (allCollected && this.gameState === 'playing') {
+                    this.gameState = 'levelComplete';
+                    this.showMessage('🎉 关卡完成！');
+                }
+                
+                // 更新粒子
+                this.particles = this.particles.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    p.vy += 0.2; // 重力
+                    return p.life > 0;
+                });
+            }
+            
+            draw() {
+                // 清空画布
+                this.ctx.fillStyle = 'rgba(26, 26, 46, 0.2)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 画网格背景
+                this.ctx.strokeStyle = 'rgba(100, 150, 200, 0.1)';
+                this.ctx.lineWidth = 1;
+                for (let x = 0; x < this.canvas.width; x += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                // 画章鱼中心
+                this.ctx.fillStyle = '#ff6b9d';
+                this.ctx.beginPath();
+                this.ctx.arc(this.mouseX, this.mouseY, 15, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // 画眼睛
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.beginPath();
+                this.ctx.arc(this.mouseX - 5, this.mouseY - 3, 3, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(this.mouseX + 5, this.mouseY - 3, 3, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // 画触手
+                for (let tentacle of this.tentacles) {
+                    const endX = this.mouseX + Math.cos(tentacle.angle) * tentacle.length;
+                    const endY = this.mouseY + Math.sin(tentacle.angle) * tentacle.length;
+                    
+                    this.ctx.strokeStyle = '#ff6b9d';
+                    this.ctx.lineWidth = 8;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.mouseX, this.mouseY);
+                    this.ctx.lineTo(endX, endY);
+                    this.ctx.stroke();
+                }
+                
+                // 画星星
+                for (let star of this.stars) {
+                    if (!star.collected) {
+                        this.drawStar(star.x, star.y, star.size, star.rotation);
+                    }
+                }
+                
+                // 画障碍物
+                for (let obj of this.objects) {
+                    this.ctx.fillStyle = '#60a5fa';
+                    this.ctx.fillRect(obj.x - obj.size, obj.y - obj.size, obj.size * 2, obj.size * 2);
+                    this.ctx.strokeStyle = '#4ade80';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(obj.x - obj.size, obj.y - obj.size, obj.size * 2, obj.size * 2);
+                }
+                
+                // 画粒子
+                for (let p of this.particles) {
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.globalAlpha = p.life / 20;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.globalAlpha = 1;
+                }
+                
+                // 画暂停状态
+                if (this.isPaused) {
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.fillStyle = '#4ade80';
+                    this.ctx.font = 'bold 40px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('暂停', this.canvas.width / 2, this.canvas.height / 2);
+                }
+            }
+            
+            drawStar(x, y, size, rotation) {
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                this.ctx.rotate(rotation);
+                
+                this.ctx.fillStyle = '#ffeb3b';
+                this.ctx.strokeStyle = '#fbc02d';
+                this.ctx.lineWidth = 2;
+                
+                this.ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                    const radius = i % 2 === 0 ? size : size / 2;
+                    const px = Math.cos(angle) * radius;
+                    const py = Math.sin(angle) * radius;
+                    if (i === 0) this.ctx.moveTo(px, py);
+                    else this.ctx.lineTo(px, py);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+            
+            createParticles(x, y, color) {
+                for (let i = 0; i < 8; i++) {
+                    const angle = (Math.PI * 2 / 8) * i;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * 3,
+                        vy: Math.sin(angle) * 3,
+                        life: 20,
+                        size: 3,
+                        color: color
+                    });
+                }
+            }
+            
+            animate() {
+                this.update();
+                this.draw();
+                this.updateUI();
+                requestAnimationFrame(() => this.animate());
+            }
+            
+            updateUI() {
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('combo').textContent = this.combo + 'x';
+            }
+            
+            togglePause() {
+                this.isPaused = !this.isPaused;
+            }
+            
+            nextLevel() {
+                if (this.gameState === 'levelComplete') {
+                    this.level++;
+                    this.gameState = 'playing';
+                    this.initLevel();
+                    this.showMessage('');
+                } else {
+                    alert('请先完成当前关卡！');
+                }
+            }
+            
+            showMessage(text) {
+                document.getElementById('message').textContent = text;
+            }
+            
+            playSound() {
+                // 简单的音频反馈（如果需要）
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.1);
+            }
+        }
+        
+        const gameInstance = new Game();
+    </script>
+</body>
+</html>
