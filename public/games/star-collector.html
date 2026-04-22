@@ -3,214 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>星球收集者 - Star Collector</title>
+    <title>星光收集器 - Star Collector</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#001a33;font-family:Arial,sans-serif;color:#fff}
-        #game-container{text-align:center}
-        canvas{display:block;background:#0a1929;border:3px solid #00d4ff;cursor:pointer;margin:20px auto;image-rendering:pixelated}
-        #info{font-size:18px;margin:10px 0;text-shadow:0 0 10px #00d4ff}
-        #score{color:#ffd700}
-        #level{color:#00ff88}
-        button{padding:8px 16px;margin:5px;font-size:16px;background:#00d4ff;border:none;cursor:pointer;color:#000;font-weight:bold;border-radius:4px;transition:all 0.3s}
-        button:hover{background:#00ffff;transform:scale(1.05)}
-        #game-over{font-size:24px;color:#ff6b6b;margin:10px 0}
+        body { margin: 0; padding: 20px; background: #1a1a2e; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { text-align: center; }
+        canvas { background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); border: 3px solid #e94560; display: block; margin: 0 auto; cursor: none; }
+        .info { color: #00d4ff; margin-top: 15px; font-size: 18px; font-weight: bold; }
+        .controls { color: #00ff88; margin-top: 10px; font-size: 14px; }
+        h1 { color: #e94560; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(233, 69, 96, 0.8); }
+        .score { color: #ffff00; display: inline-block; margin: 0 20px; }
+        .level { color: #00ff88; display: inline-block; margin: 0 20px; }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>🌟 星球收集者</h1>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="info">
-            <span id="score">得分: 0</span> | <span id="level">关卡: 1</span> | <span id="combo">连击: 0</span>
+    <div class="container">
+        <h1>✨ 星光收集器 ✨</h1>
+        <div>
+            <span class="score">分数: <span id="score">0</span></span>
+            <span class="level">关卡: <span id="level">1</span></span>
         </div>
-        <div id="game-over"></div>
-        <button onclick="game.reset()">重新开始</button>
-        <button onclick="togglePause()">暂停</button>
+        <canvas id="game" width="800" height="600"></canvas>
+        <div class="controls">
+            <p>🎮 用鼠标移动篮子 | 收集⭐获得分数 | 躲避💣炸弹</p>
+            <p id="gameStatus">点击开始游戏</p>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         
-        const STARS = [
-            {color:'#FFD700',symbol:'☀',value:10},
-            {color:'#00CED1',symbol:'◆',value:20},
-            {color:'#FF69B4',symbol:'●',value:30},
-            {color:'#32CD32',symbol:'■',value:40}
-        ];
-        
-        const GRID_SIZE = 5;
-        const CELL_SIZE = 120;
-        const PADDING = 40;
-        
-        let game = {
-            grid: [],
-            score: 0,
-            level: 1,
-            combo: 0,
-            selected: null,
-            gameOver: false,
-            paused: false,
-            
-            init() {
-                this.grid = [];
+        class Game {
+            constructor() {
                 this.score = 0;
                 this.level = 1;
-                this.combo = 0;
-                this.selected = null;
-                this.gameOver = false;
-                this.paused = false;
-                this.generateGrid();
-                this.update();
-            },
-            
-            generateGrid() {
-                this.grid = [];
-                for(let i=0;i<GRID_SIZE;i++){
-                    this.grid[i] = [];
-                    for(let j=0;j<GRID_SIZE;j++){
-                        this.grid[i][j] = Math.floor(Math.random()*STARS.length);
-                    }
-                }
-            },
-            
-            getRowCol(x,y){
-                const col = Math.floor((x-PADDING)/CELL_SIZE);
-                const row = Math.floor((y-PADDING)/CELL_SIZE);
-                if(col>=0&&col<GRID_SIZE&&row>=0&&row<GRID_SIZE) return {row,col};
-                return null;
-            },
-            
-            click(x,y){
-                if(this.gameOver||this.paused) return;
-                const pos = this.getRowCol(x,y);
-                if(!pos) return;
-                
-                if(this.selected&&this.selected.row===pos.row&&this.selected.col===pos.col){
-                    this.selected = null;
-                } else if(this.selected){
-                    const dr=Math.abs(this.selected.row-pos.row);
-                    const dc=Math.abs(this.selected.col-pos.col);
-                    if((dr===1&&dc===0)||(dr===0&&dc===1)){
-                        [this.grid[this.selected.row][this.selected.col],this.grid[pos.row][pos.col]]=[this.grid[pos.row][pos.col],this.grid[this.selected.row][this.selected.col]];
-                        this.selected = null;
-                        this.checkMatches();
-                    } else {
-                        this.selected = pos;
-                    }
-                } else {
-                    this.selected = pos;
-                }
-            },
-            
-            checkMatches(){
-                let matched = new Set();
-                for(let i=0;i<GRID_SIZE;i++){
-                    for(let j=0;j<GRID_SIZE;j++){
-                        if(this.grid[i][j]===-1) continue;
-                        let group=this.getGroup(i,j);
-                        if(group.length>=3){
-                            group.forEach(c=>matched.add(c));
-                        }
-                    }
-                }
-                if(matched.size>0){
-                    this.combo++;
-                    matched.forEach(c=>{
-                        const [i,j]=c.split(',');
-                        this.grid[i][j]=-1;
-                        this.score+=STARS[this.grid[i][j]||0]?.value||10;
-                    });
-                    this.score+=this.combo*5;
-                    this.gravity();
-                    setTimeout(()=>this.checkMatches(),200);
-                } else {
-                    this.combo=0;
-                }
-                if(this.score>this.level*100){
-                    this.level++;
-                }
-            },
-            
-            getGroup(i,j,visited=new Set()){
-                const key=`${i},${j}`;
-                if(visited.has(key)||i<0||i>=GRID_SIZE||j<0||j>=GRID_SIZE||this.grid[i][j]===-1) return [];
-                visited.add(key);
-                const type=this.grid[i][j];
-                let group=[key];
-                [[0,1],[0,-1],[1,0],[-1,0]].forEach(([di,dj])=>{
-                    if(this.grid[i+di]?.[j+dj]===type){
-                        group.push(...this.getGroup(i+di,j+dj,visited));
-                    }
-                });
-                return group;
-            },
-            
-            gravity(){
-                for(let j=0;j<GRID_SIZE;j++){
-                    let empty=GRID_SIZE-1;
-                    for(let i=GRID_SIZE-1;i>=0;i--){
-                        if(this.grid[i][j]!==-1){
-                            if(i!==empty) this.grid[empty][j]=this.grid[i][j];
-                            this.grid[i][j]=-1;
-                            empty--;
-                        }
-                    }
-                }
-                for(let i=0;i<GRID_SIZE;i++){
-                    for(let j=0;j<GRID_SIZE;j++){
-                        if(this.grid[i][j]===-1){
-                            this.grid[i][j]=Math.floor(Math.random()*STARS.length);
-                        }
-                    }
-                }
-            },
-            
-            update(){
-                ctx.fillStyle='#0a1929';
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-                for(let i=0;i<GRID_SIZE;i++){
-                    for(let j=0;j<GRID_SIZE;j++){
-                        const x=PADDING+j*CELL_SIZE;
-                        const y=PADDING+i*CELL_SIZE;
-                        const idx=this.grid[i][j];
-                        if(idx===-1) idx=0;
-                        ctx.fillStyle=STARS[idx].color;
-                        ctx.fillRect(x+5,y+5,CELL_SIZE-10,CELL_SIZE-10);
-                        if(this.selected?.row===i&&this.selected?.col===j){
-                            ctx.strokeStyle='#ffff00';
-                            ctx.lineWidth=3;
-                            ctx.strokeRect(x+5,y+5,CELL_SIZE-10,CELL_SIZE-10);
-                        }
-                        ctx.fillStyle='#000';
-                        ctx.font='bold 40px Arial';
-                        ctx.textAlign='center';
-                        ctx.textBaseline='middle';
-                        ctx.fillText(STARS[idx].symbol,x+CELL_SIZE/2,y+CELL_SIZE/2);
-                    }
-                }
-                document.getElementById('score').textContent=`得分: ${this.score}`;
-                document.getElementById('level').textContent=`关卡: ${this.level}`;
-                document.getElementById('combo').textContent=`连击: ${this.combo}`;
-                if(!this.gameOver) requestAnimationFrame(()=>this.update());
-            },
-            
-            reset(){
+                this.gameRunning = false;
+                this.basket = { x: canvas.width / 2, y: canvas.height - 50, width: 60, height: 30, vx: 0 };
+                this.stars = [];
+                this.bombs = [];
+                this.particles = [];
+                this.mouseX = canvas.width / 2;
+                this.gameTime = 0;
+                this.baseSpawnRate = 0.03;
+                this.spawnRate = this.baseSpawnRate;
+                this.bombChance = 0.005;
                 this.init();
             }
-        };
-        
-        canvas.addEventListener('click',(e)=>{
-            const rect=canvas.getBoundingClientRect();
-            game.click(e.clientX-rect.left,e.clientY-rect.top);
-        });
-        
-        function togglePause(){
-            game.paused=!game.paused;
+            
+            init() {
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    this.mouseX = Math.max(30, Math.min(canvas.width - 30, e.clientX - rect.left));
+                });
+                canvas.addEventListener('click', () => {
+                    if (!this.gameRunning) this.start();
+                    else if (this.gameOver) this.reset();
+                });
+                this.start();
+            }
+            
+            start() {
+                this.gameRunning = true;
+                this.gameOver = false;
+                document.getElementById('gameStatus').textContent = '游戏进行中...';
+                this.gameLoop();
+            }
+            
+            reset() {
+                this.score = 0;
+                this.level = 1;
+                this.gameTime = 0;
+                this.stars = [];
+                this.bombs = [];
+                this.particles = [];
+                this.spawnRate = this.baseSpawnRate;
+                this.start();
+            }
+            
+            update() {
+                this.gameTime++;
+                
+                // 篮子跟随鼠标
+                this.basket.x += (this.mouseX - this.basket.x) * 0.15;
+                this.basket.x = Math.max(30, Math.min(canvas.width - 30, this.basket.x));
+                
+                // 生成星星
+                if (Math.random() < this.spawnRate) {
+                    this.stars.push({
+                        x: Math.random() * (canvas.width - 20) + 10,
+                        y: -10,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: Math.random() * 1 + 2,
+                        radius: 6,
+                        rotation: 0
+                    });
+                }
+                
+                // 生成炸弹
+                if (Math.random() < this.bombChance && this.stars.length < 15) {
+                    this.bombs.push({
+                        x: Math.random() * (canvas.width - 20) + 10,
+                        y: -10,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: Math.random() * 1 + 1.5,
+                        radius: 8
+                    });
+                }
+                
+                // 更新星星
+                this.stars = this.stars.filter(star => {
+                    star.x += star.vx;
+                    star.y += star.vy;
+                    star.vy += 0.1; // 重力
+                    star.rotation += 0.1;
+                    
+                    // 检测篮子碰撞
+                    const dx = star.x - this.basket.x;
+                    const dy = star.y - this.basket.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < 50) {
+                        this.score += 10;
+                        this.createParticles(star.x, star.y, '⭐');
+                        return false;
+                    }
+                    
+                    return star.y < canvas.height;
+                });
+                
+                // 更新炸弹
+                this.bombs = this.bombs.filter(bomb => {
+                    bomb.x += bomb.vx;
+                    bomb.y += bomb.vy;
+                    bomb.vy += 0.08;
+                    
+                    // 检测篮子碰撞
+                    const dx = bomb.x - this.basket.x;
+                    const dy = bomb.y - this.basket.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < 50) {
+                        this.gameOver = true;
+                        this.createParticles(bomb.x, bomb.y, '💥');
+                        return false;
+                    }
+                    
+                    return bomb.y < canvas.height;
+                });
+                
+                // 更新粒子
+                this.particles = this.particles.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    return p.life > 0;
+                });
+                
+                // 关卡升级
+                if (this.score > 0 && this.score % 100 === 0) {
+                    const newLevel = Math.floor(this.score / 100) + 1;
+                    if (newLevel !== this.level) {
+                        this.level = newLevel;
+                        this.spawnRate = this.baseSpawnRate + (this.level - 1) * 0.02;
+                        this.bombChance = 0.005 + (this.level - 1) * 0.002;
+                    }
+                }
+            }
+            
+            draw() {
+                // 清空背景
+                ctx.fillStyle = 'rgba(15, 52, 96, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制星星
+                this.stars.forEach(star => {
+                    ctx.save();
+                    ctx.translate(star.x, star.y);
+                    ctx.rotate(star.rotation);
+                    ctx.fillStyle = '#ffff00';
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⭐', 0, 0);
+                    ctx.restore();
+                });
+                
+                // 绘制炸弹
+                this.bombs.forEach(bomb => {
+                    ctx.fillStyle = '#ff3333';
+                    ctx.beginPath();
+                    ctx.arc(bomb.x, bomb.y, bomb.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('💣', bomb.x, bomb.y);
+                });
+                
+                // 绘制篮子
+                ctx.fillStyle = '#00ff88';
+                ctx.fillRect(this.basket.x - this.basket.width/2, this.basket.y, this.basket.width, this.basket.height);
+                ctx.fillStyle = '#00cc66';
+                ctx.fillRect(this.basket.x - this.basket.width/2 + 2, this.basket.y + 2, this.basket.width - 4, 4);
+                
+                // 绘制粒子
+                this.particles.forEach(p => {
+                    ctx.fillStyle = p.text;
+                    ctx.font = `${p.size}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.globalAlpha = p.life / 30;
+                    ctx.fillText(p.text, p.x, p.y);
+                    ctx.globalAlpha = 1;
+                });
+                
+                // 更新UI
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                
+                if (this.gameOver) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ff3333';
+                    ctx.font = 'bold 40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('游戏结束!', canvas.width/2, canvas.height/2 - 40);
+                    ctx.fillStyle = '#ffff00';
+                    ctx.font = '24px Arial';
+                    ctx.fillText(`最终分数: ${this.score}`, canvas.width/2, canvas.height/2 + 20);
+                    document.getElementById('gameStatus').textContent = '点击重新开始';
+                }
+            }
+            
+            createParticles(x, y, emoji) {
+                for (let i = 0; i < 5; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 3,
+                        vy: (Math.random() - 1) * 2,
+                        life: 30,
+                        text: emoji,
+                        size: 16 + Math.random() * 8
+                    });
+                }
+            }
+            
+            gameLoop() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
         }
         
-        game.init();
+        new Game();
     </script>
 </body>
 </html>
