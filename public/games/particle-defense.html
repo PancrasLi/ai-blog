@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粒子防御战</title>
+    <style>
+        body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #1a1a2e; font-family: Arial, sans-serif; }
+        canvas { display: block; background: #0f0f1e; border: 3px solid #00d4ff; cursor: crosshair; }
+        .ui { position: fixed; top: 10px; left: 10px; color: #00d4ff; font-size: 18px; z-index: 100; }
+        .score { margin-bottom: 10px; }
+        .health { margin-bottom: 10px; color: #ff006e; }
+        .combo { color: #ffbe0b; font-weight: bold; }
+        .gameOver { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: #00d4ff; padding: 40px; border: 3px solid #ff006e; z-index: 200; text-align: center; display: none; }
+        .gameOver h1 { font-size: 48px; margin: 0 0 20px 0; }
+        .gameOver p { font-size: 24px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="ui">
+        <div class="score">分数: <span id="score">0</span></div>
+        <div class="health">生命: <span id="health">5</span></div>
+        <div class="combo">连击: <span id="combo">0</span></div>
+    </div>
+    <div class="gameOver" id="gameOverScreen">
+        <h1>游戏结束</h1>
+        <p>最终分数: <span id="finalScore">0</span></p>
+        <p id="tip">按空格键重新开始</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.radius = Math.random() * 8 + 4;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.life = 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.15;
+                this.life -= 0.02;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -0.8;
+                if (this.y > canvas.height) this.life = 0;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 15 + 10;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = Math.random() * 2 + 1;
+                this.color = `hsl(${Math.random() * 60}, 100%, 45%)`;
+                this.hp = this.radius / 5;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < this.radius) this.vx = Math.abs(this.vx);
+                if (this.x > canvas.width - this.radius) this.vx = -Math.abs(this.vx);
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        let particles = [];
+        let enemies = [];
+        let score = 0;
+        let health = 5;
+        let combo = 0;
+        let gameOver = false;
+        let frame = 0;
+
+        function handleClick(e) {
+            if (gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const dist = Math.hypot(x - enemy.x, y - enemy.y);
+                if (dist < enemy.radius) {
+                    enemy.hp -= 1;
+                    combo++;
+                    for (let j = 0; j < 15; j++) {
+                        particles.push(new Particle(enemy.x, enemy.y));
+                    }
+                    if (enemy.hp <= 0) {
+                        enemies.splice(i, 1);
+                        score += Math.floor(100 * combo * 0.1);
+                    }
+                }
+            }
+        }
+
+        function handleKeypress(e) {
+            if (e.code === 'Space' && gameOver) {
+                gameOver = false;
+                score = 0;
+                health = 5;
+                combo = 0;
+                enemies = [];
+                particles = [];
+            }
+        }
+
+        function update() {
+            frame++;
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => p.update());
+
+            enemies.forEach(e => e.update());
+            enemies = enemies.filter(e => e.y < canvas.height + 50);
+
+            enemies.forEach(e => {
+                if (e.y > canvas.height - 50) {
+                    health--;
+                    combo = 0;
+                }
+            });
+
+            if (health <= 0) {
+                gameOver = true;
+            }
+
+            if (frame % 40 === 0 && !gameOver) {
+                const x = Math.random() * (canvas.width - 100) + 50;
+                enemies.push(new Enemy(x, -20));
+            }
+
+            if (frame % 120 === 0 && enemies.length < 5 && !gameOver) {
+                for (let i = 0; i < 2; i++) {
+                    const x = Math.random() * (canvas.width - 100) + 50;
+                    enemies.push(new Enemy(x, -20));
+                }
+            }
+
+            combo = Math.max(0, combo - 0.005);
+        }
+
+        function draw() {
+            ctx.globalAlpha = 1;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => p.draw());
+            enemies.forEach(e => e.draw());
+
+            document.getElementById('score').textContent = Math.floor(score);
+            document.getElementById('health').textContent = health;
+            document.getElementById('combo').textContent = Math.floor(combo);
+
+            if (gameOver) {
+                document.getElementById('gameOverScreen').style.display = 'block';
+                document.getElementById('finalScore').textContent = Math.floor(score);
+            } else {
+                document.getElementById('gameOverScreen').style.display = 'none';
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        canvas.addEventListener('click', handleClick);
+        window.addEventListener('keypress', handleKeypress);
+        gameLoop();
+    </script>
+</body>
+</html>
