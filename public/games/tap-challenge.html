@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指尖反应挑战 - Tap Challenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        #gameCanvas {
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            border-radius: 12px;
+            border: 3px solid #667eea;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .info {
+            display: flex;
+            gap: 40px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .info div { display: flex; gap: 10px; }
+        .label { color: #aaa; font-size: 14px; }
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        #startBtn {
+            background: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        #startBtn:hover { background: #5568d3; transform: translateY(-2px); }
+        #resetBtn {
+            background: #764ba2;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+        }
+        #resetBtn:hover { background: #653a8a; transform: translateY(-2px); }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+        }
+        .modal-content h2 { margin-bottom: 20px; color: #333; }
+        .modal-content p { color: #666; margin-bottom: 30px; }
+        .score-display { font-size: 36px; color: #667eea; font-weight: bold; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="info">
+            <div>
+                <span class="label">得分:</span>
+                <span id="score">0</span>
+            </div>
+            <div>
+                <span class="label">生命:</span>
+                <span id="lives">3</span>
+            </div>
+            <div>
+                <span class="label">难度:</span>
+                <span id="level">1</span>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="480" height="600"></canvas>
+        <div class="controls">
+            <button id="startBtn">开始游戏</button>
+            <button id="resetBtn">重置</button>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>游戏结束</h2>
+            <p>最终得分</p>
+            <div class="score-display" id="finalScore">0</div>
+            <p id="resultText"></p>
+            <button onclick="resetGame()" style="background: #667eea; margin-top: 20px; width: 100%; cursor: pointer; border: none; padding: 12px; border-radius: 8px; color: white; font-weight: bold;">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameState = {
+            score: 0,
+            lives: 3,
+            level: 1,
+            isGameRunning: false,
+            isGameOver: false,
+            targets: [],
+            clickedRecently: false
+        };
+
+        const TARGET_RADIUS = 35;
+        const MAX_TARGETS = 1;
+        
+        class Target {
+            constructor() {
+                this.radius = TARGET_RADIUS;
+                this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
+                this.y = Math.random() * (canvas.height - 100 - this.radius * 2) + this.radius;
+                this.duration = 1500 - gameState.level * 100; // 随难度递减
+                this.duration = Math.max(600, this.duration);
+                this.startTime = Date.now();
+                this.pulsePhase = 0;
+            }
+
+            isAlive() {
+                return Date.now() - this.startTime < this.duration;
+            }
+
+            isClicked(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                return Math.sqrt(dx * dx + dy * dy) < this.radius;
+            }
+
+            draw() {
+                const timeLeft = this.duration - (Date.now() - this.startTime);
+                const alpha = Math.max(0.2, timeLeft / this.duration);
+                
+                // 脉冲效果
+                this.pulsePhase = (Date.now() - this.startTime) / this.duration * Math.PI * 2;
+                const pulseRadius = this.radius + Math.sin(this.pulsePhase) * 5;
+
+                // 外圈光晕
+                ctx.fillStyle = `rgba(102, 126, 234, ${alpha * 0.3})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseRadius + 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 主体圆形 - 渐变
+                const gradient = ctx.createRadialGradient(this.x - 10, this.y - 10, 0, this.x, this.y, pulseRadius);
+                gradient.addColorStop(0, '#88d8ff');
+                gradient.addColorStop(1, '#667eea');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 边框
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 中心点
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function update() {
+            if (!gameState.isGameRunning || gameState.isGameOver) return;
+
+            // 移除已过期的目标
+            gameState.targets = gameState.targets.filter(t => t.isAlive());
+
+            // 添加新目标
+            if (gameState.targets.length < MAX_TARGETS) {
+                gameState.targets.push(new Target());
+            }
+
+            // 如果没有活跃目标，扣一条命
+            if (gameState.targets.length === 0 && gameState.clickedRecently === false) {
+                gameState.lives--;
+                if (gameState.lives <= 0) {
+                    gameState.isGameOver = true;
+                    gameState.isGameRunning = false;
+                    showGameOver();
+                }
+            }
+        }
+
+        function draw() {
+            // 清空画布
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制背景网格
+            ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= canvas.width; i += 60) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i <= canvas.height; i += 60) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // 绘制目标
+            gameState.targets.forEach(target => target.draw());
+
+            // 游戏状态提示
+            if (!gameState.isGameRunning && !gameState.isGameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, canvas.height / 2 - 50, canvas.width, 100);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('点击"开始游戏"按钮开始', canvas.width / 2, canvas.height / 2);
+            }
+
+            // 游戏结束提示
+            if (gameState.isGameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function handleCanvasClick(e) {
+            if (!gameState.isGameRunning || gameState.isGameOver) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            let hitTarget = false;
+            for (let i = 0; i < gameState.targets.length; i++) {
+                if (gameState.targets[i].isClicked(x, y)) {
+                    gameState.score += Math.max(10, 50 - gameState.level * 2);
+                    gameState.level = Math.floor(gameState.score / 100) + 1;
+                    gameState.targets.splice(i, 1);
+                    hitTarget = true;
+                    break;
+                }
+            }
+
+            if (!hitTarget) {
+                gameState.lives--;
+                if (gameState.lives <= 0) {
+                    gameState.isGameOver = true;
+                    gameState.isGameRunning = false;
+                    showGameOver();
+                }
+            }
+
+            gameState.clickedRecently = true;
+            setTimeout(() => { gameState.clickedRecently = false; }, 500);
+
+            updateUI();
+        }
+
+        function startGame() {
+            if (gameState.isGameRunning) return;
+            gameState.isGameRunning = true;
+            gameState.isGameOver = false;
+            gameState.clickedRecently = false;
+            updateUI();
+        }
+
+        function resetGame() {
+            gameState = {
+                score: 0,
+                lives: 3,
+                level: 1,
+                isGameRunning: false,
+                isGameOver: false,
+                targets: [],
+                clickedRecently: false
+            };
+            document.getElementById('gameOverModal').classList.remove('active');
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('level').textContent = gameState.level;
+        }
+
+        function showGameOver() {
+            const modal = document.getElementById('gameOverModal');
+            document.getElementById('finalScore').textContent = gameState.score;
+            
+            let resultText = '';
+            if (gameState.score >= 500) resultText = '🏆 超级高手！你是指尖王者！';
+            else if (gameState.score >= 300) resultText = '⭐ 太棒了！你反应很快！';
+            else if (gameState.score >= 100) resultText = '👍 不错！再来一局突破纪录吧';
+            else resultText = '💪 加油！每次都会进步的';
+            
+            document.getElementById('resultText').textContent = resultText;
+            modal.classList.add('active');
+        }
+
+        // 事件监听
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+        canvas.addEventListener('click', handleCanvasClick);
+
+        // 初始化
+        gameLoop();
+        updateUI();
+    </script>
+</body>
+</html>
