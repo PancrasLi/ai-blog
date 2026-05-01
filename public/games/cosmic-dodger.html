@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cosmic Dodger</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial}
+canvas{display:block;background:#0a0e27;border:2px solid #00ff88}
+#ui{position:absolute;color:#00ff88;font-size:14px;font-weight:bold;text-shadow:0 0 10px #00ff88}
+#score{top:10px;left:10px}
+#level{top:40px;left:10px}
+#lives{top:70px;left:10px}
+#gameOverScreen{position:absolute;background:rgba(0,0,0,0.9);width:800px;height:600px;display:none;justify-content:center;align-items:center;flex-direction:column;z-index:10}
+#gameOverScreen h1{color:#ff3333;font-size:48px;margin-bottom:20px;text-shadow:0 0 20px #ff3333}
+#gameOverScreen p{color:#00ff88;font-size:20px;margin:10px}
+#gameOverScreen button{margin-top:20px;padding:10px 30px;font-size:16px;background:#00ff88;color:#000;border:none;cursor:pointer;border-radius:5px}
+</style>
+</head>
+<body>
+<div id="ui">
+<div id="score">Score: 0</div>
+<div id="level">Level: 1</div>
+<div id="lives">Lives: ❤️❤️❤️</div>
+</div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="gameOverScreen">
+<h1>GAME OVER</h1>
+<p id="finalScore">Final Score: 0</p>
+<p id="finalLevel">Level: 1</p>
+<button onclick="location.reload()">Play Again</button>
+</div>
+<script>
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d');
+let game={score:0,level:1,lives:3,gameOver:false,wave:0};
+let player={x:canvas.width/2,y:canvas.height-50,w:30,h:30,speed:6,dx:0};
+let asteroids=[],enemies=[],powerUps=[],particles=[];
+function drawShip(){
+ ctx.fillStyle='#00ff88';
+ ctx.beginPath();
+ ctx.moveTo(player.x,player.y-15);
+ ctx.lineTo(player.x+15,player.y+15);
+ ctx.lineTo(player.x,player.y+5);
+ ctx.lineTo(player.x-15,player.y+15);
+ ctx.closePath();
+ ctx.fill();
+ ctx.strokeStyle='#00ff88';
+ ctx.lineWidth=2;
+ ctx.stroke();
+}
+function createAsteroid(x,y,sz){
+ asteroids.push({x:x||Math.random()*canvas.width,y:y||Math.random()*-50,r:sz||Math.random()*20+10,vx:(Math.random()-0.5)*4,vy:Math.random()*3+2,life:255});
+}
+function createEnemy(x){
+ enemies.push({x:x||Math.random()*canvas.width,y:-20,r:8,vy:2+game.level*0.5,vx:(Math.random()-0.5)*2,life:255});
+}
+function createPowerUp(x,y){
+ powerUps.push({x:x,y:y,r:8,vy:2,type:Math.random()>0.5?'shield':'rapid',life:255});
+}
+function drawAsteroid(a){
+ ctx.fillStyle=`rgba(150,100,255,${a.life/255})`;
+ ctx.beginPath();
+ ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+ ctx.fill();
+ ctx.strokeStyle=`rgba(200,150,255,${a.life/255})`;
+ ctx.lineWidth=2;
+ ctx.stroke();
+}
+function updateGame(){
+ if(game.gameOver)return;
+ player.x+=player.dx;
+ player.x=Math.max(15,Math.min(canvas.width-15,player.x));
+ asteroids.forEach((a,i)=>{
+  a.x+=a.vx;a.y+=a.vy;a.life-=2;
+  if(a.y>canvas.height||a.life<=0)asteroids.splice(i,1);
+  if(collide(player,a)){game.lives--;createParticles(player.x,player.y,8);if(game.lives<=0)game.gameOver=true;}
+ });
+ enemies.forEach((e,i)=>{
+  e.x+=e.vx;e.y+=e.vy;e.life-=1;
+  if(e.y>canvas.height||e.life<=0)enemies.splice(i,1);
+  if(collide(player,e)){game.lives--;createParticles(player.x,player.y,8);if(game.lives<=0)game.gameOver=true;}
+ });
+ powerUps.forEach((p,i)=>{
+  p.y+=p.vy;p.life-=2;
+  if(p.y>canvas.height||p.life<=0)powerUps.splice(i,1);
+  if(collide(player,p)){game.score+=50;createParticles(p.x,p.y,5,'#ffff00');powerUps.splice(i,1);}
+ });
+ particles.forEach((p,i)=>{
+  p.x+=p.vx;p.y+=p.vy;p.life-=5;
+  if(p.life<=0)particles.splice(i,1);
+ });
+ game.wave++;
+ if(game.wave%(60-game.level*5)===0&&asteroids.length<10+game.level*2)createAsteroid();
+ if(game.wave%(80-game.level*8)===0&&enemies.length<5+game.level)createEnemy();
+ if(game.score>game.level*1000){game.level++;game.lives=Math.min(game.lives+1,5);}
+}
+function collide(a,b){
+ let dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+ return d<(a.w||a.r)+(b.r||b.w)/2;
+}
+function createParticles(x,y,n,c='#00ff88'){
+ for(let i=0;i<n;i++){
+  particles.push({x:x,y:y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:100,c:c});
+ }
+}
+function drawParticles(){
+ particles.forEach(p=>{
+  ctx.fillStyle=p.c.replace(')',`,${p.life/100})`).replace('rgb','rgba');
+  ctx.fillRect(p.x,p.y,3,3);
+ });
+}
+function drawGame(){
+ ctx.fillStyle='#0a0e27';ctx.fillRect(0,0,canvas.width,canvas.height);
+ drawShip();
+ asteroids.forEach(a=>drawAsteroid(a));
+ enemies.forEach(e=>{
+  ctx.fillStyle=`rgba(255,50,100,${e.life/255})`;
+  ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();
+ });
+ powerUps.forEach(p=>{
+  ctx.fillStyle=p.type==='shield'?'#ffff00':'#00ffff';
+  ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+ });
+ drawParticles();
+ document.getElementById('score').textContent='Score: '+game.score;
+ document.getElementById('level').textContent='Level: '+game.level;
+ document.getElementById('lives').textContent='Lives: '+('❤️'.repeat(game.lives)||'💀');
+ if(game.gameOver){
+  document.getElementById('gameOverScreen').style.display='flex';
+  document.getElementById('finalScore').textContent='Final Score: '+game.score;
+  document.getElementById('finalLevel').textContent='Level: '+game.level;
+ }
+}
+function gameLoop(){
+ updateGame();drawGame();
+ requestAnimationFrame(gameLoop);
+}
+document.addEventListener('keydown',e=>{
+ if(e.key==='ArrowLeft'||e.key==='a')player.dx=-player.speed;
+ if(e.key==='ArrowRight'||e.key==='d')player.dx=player.speed;
+});
+document.addEventListener('keyup',e=>{
+ if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='a'||e.key==='d')player.dx=0;
+});
+canvas.addEventListener('mousemove',e=>{
+ let rect=canvas.getBoundingClientRect();
+ player.x=e.clientX-rect.left;
+});
+for(let i=0;i<3;i++)createAsteroid();
+gameLoop();
+</script>
+</body>
+</html>
