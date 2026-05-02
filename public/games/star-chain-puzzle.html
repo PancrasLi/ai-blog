@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⭐ 星之链接 - Star Chain Puzzle</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        #gameContainer {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        #gameCanvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            display: block;
+            margin: 20px auto;
+            background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%);
+            cursor: crosshair;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 5px;
+        }
+        h1 {
+            color: #667eea;
+            margin: 10px 0;
+            font-size: 28px;
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 300px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .modal-content p {
+            color: #666;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .chain-display {
+            font-size: 32px;
+            color: #667eea;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>⭐ 星之链接 Star Chain Puzzle</h1>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div>分数 Score</div>
+                <div id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div>链数 Chain</div>
+                <div id="chainCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div>关卡 Level</div>
+                <div id="level">1</div>
+            </div>
+            <div class="stat-box">
+                <div>时间 Time</div>
+                <div id="time">60s</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="chain-display" id="chainDisplay"></div>
+
+        <div class="controls">
+            <button id="startBtn" onclick="startGame()">开始游戏 Start Game</button>
+            <button id="pauseBtn" onclick="togglePause()" style="display: none;">暂停 Pause</button>
+            <button onclick="resetGame()">重新开始 Reset</button>
+        </div>
+
+        <div class="info">
+            <p>点击相邻的同色星星形成链条，链条越长分数越高！Click adjacent stars of the same color to form chains!</p>
+        </div>
+    </div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2>游戏结束 Game Over</h2>
+            <p>最终分数 Final Score</p>
+            <div class="chain-display" id="finalScore">0</div>
+            <p>最长链 Longest Chain: <span id="longestChain">0</span> 颗星</p>
+            <button onclick="closeModal()">再来一局 Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const GRID_SIZE = 6;
+        const STAR_RADIUS = 30;
+        const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+        
+        let grid = [];
+        let selectedStars = [];
+        let score = 0;
+        let chainCount = 0;
+        let level = 1;
+        let timeLeft = 60;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameTimer = null;
+        let longestChain = 0;
+        let chainHistory = [];
+        
+        function Star(x, y, colorIndex) {
+            this.x = x;
+            this.y = y;
+            this.colorIndex = colorIndex;
+            this.color = COLORS[colorIndex];
+            this.selected = false;
+            this.merging = false;
+            this.scale = 1;
+        }
+        
+        Star.prototype.draw = function() {
+            ctx.save();
+            ctx.globalAlpha = this.merging ? 0.5 : 1;
+            
+            // 星星边框
+            ctx.fillStyle = this.selected ? '#FFD700' : this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, STAR_RADIUS * this.scale, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 闪光效果
+            if (this.selected) {
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, STAR_RADIUS * this.scale + 8, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // 星星数字
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('★', this.x, this.y);
+            
+            ctx.restore();
+        };
+        
+        Star.prototype.isAdjacentTo = function(other) {
+            const dx = this.x - other.x;
+            const dy = this.y - other.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance <= STAR_RADIUS * 2.2 && distance > 0;
+        };
+        
+        function initializeGrid() {
+            grid = [];
+            const padding = 50;
+            const cellWidth = (canvas.width - padding * 2) / GRID_SIZE;
+            const cellHeight = (canvas.height - padding * 2) / GRID_SIZE;
+            
+            for (let i = 0; i < GRID_SIZE; i++) {
+                grid[i] = [];
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const x = padding + (j + 0.5) * cellWidth;
+                    const y = padding + (i + 0.5) * cellHeight;
+                    const colorIndex = Math.floor(Math.random() * COLORS.length);
+                    grid[i][j] = new Star(x, y, colorIndex);
+                }
+            }
+        }
+        
+        function draw() {
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.95)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制连接线
+            if (selectedStars.length > 1) {
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.moveTo(selectedStars[0].x, selectedStars[0].y);
+                for (let i = 1; i < selectedStars.length; i++) {
+                    ctx.lineTo(selectedStars[i].x, selectedStars[i].y);
+                }
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+            
+            // 绘制所有星星
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j]) {
+                        grid[i][j].draw();
+                    }
+                }
+            }
+        }
+        
+        function getStarAtPosition(x, y) {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j]) {
+                        const star = grid[i][j];
+                        const dx = star.x - x;
+                        const dy = star.y - y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance <= STAR_RADIUS) {
+                            return star;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        
+        function canAddToChain(star) {
+            if (selectedStars.length === 0) {
+                return true;
+            }
+            if (selectedStars.includes(star)) {
+                return false;
+            }
+            if (star.colorIndex !== selectedStars[0].colorIndex) {
+                return false;
+            }
+            const lastStar = selectedStars[selectedStars.length - 1];
+            return lastStar.isAdjacentTo(star);
+        }
+        
+        function completeChain() {
+            if (selectedStars.length < 2) {
+                selectedStars = [];
+                draw();
+                return;
+            }
+            
+            const chainLength = selectedStars.length;
+            chainHistory.push(chainLength);
+            if (chainLength > longestChain) {
+                longestChain = chainLength;
+            }
+            
+            const baseScore = chainLength * 10;
+            const levelBonus = baseScore * (level - 1) * 0.5;
+            const totalScore = Math.floor(baseScore + levelBonus);
+            score += totalScore;
+            chainCount++;
+            
+            // 显示链长
+            document.getElementById('chainDisplay').textContent = `✨ 链x${chainLength} +${totalScore}pts`;
+            setTimeout(() => {
+                document.getElementById('chainDisplay').textContent = '';
+            }, 1000);
+            
+            // 消除星星
+            selectedStars.forEach(star => {
+                star.merging = true;
+                setTimeout(() => {
+                    const row = grid.indexOf(grid.find(r => r.includes(star)));
+                    const col = grid[row].indexOf(star);
+                    if (row !== -1 && col !== -1) {
+                        grid[row][col] = null;
+                    }
+                }, 300);
+            });
+            
+            selectedStars = [];
+            
+            setTimeout(() => {
+                fillEmptySpaces();
+                checkLevelUp();
+                updateUI();
+                draw();
+            }, 300);
+        }
+        
+        function fillEmptySpaces() {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                for (let i = GRID_SIZE - 1; i >= 0; i--) {
+                    if (grid[i][j] === null) {
+                        // 向下填充
+                        for (let k = i; k > 0; k--) {
+                            grid[k][j] = grid[k - 1][j];
+                        }
+                        // 顶部生成新星星
+                        const colorIndex = Math.floor(Math.random() * COLORS.length);
+                        const padding = 50;
+                        const cellWidth = (canvas.width - padding * 2) / GRID_SIZE;
+                        const x = padding + (j + 0.5) * cellWidth;
+                        grid[0][j] = new Star(x, 100, colorIndex);
+                    }
+                }
+            }
+        }
+        
+        function checkLevelUp() {
+            const newLevel = Math.floor(score / 500) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                timeLeft += 10;
+                document.getElementById('level').textContent = level;
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('chainCount').textContent = chainCount;
+            document.getElementById('level').textContent = level;
+            document.getElementById('time').textContent = timeLeft + 's';
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            gamePaused = false;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            
+            gameTimer = setInterval(() => {
+                if (!gamePaused) {
+                    timeLeft--;
+                    updateUI();
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+            
+            draw();
+        }
+        
+        function togglePause() {
+            gamePaused = !gamePaused;
+            document.getElementById('pauseBtn').textContent = gamePaused ? '继续 Resume' : '暂停 Pause';
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameTimer);
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('longestChain').textContent = longestChain;
+            document.getElementById('gameOverModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('gameOverModal').style.display = 'none';
+            resetGame();
+        }
+        
+        function resetGame() {
+            score = 0;
+            chainCount = 0;
+            level = 1;
+            timeLeft = 60;
+            longestChain = 0;
+            chainHistory = [];
+            selectedStars = [];
+            gameRunning = false;
+            gamePaused = false;
+            
+            if (gameTimer) {
+                clearInterval(gameTimer);
+            }
+            
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('pauseBtn').textContent = '暂停 Pause';
+            document.getElementById('chainDisplay').textContent = '';
+            
+            initializeGrid();
+            updateUI();
+            draw();
+        }
+        
+        canvas.addEventListener('click', function(e) {
+            if (!gameRunning || gamePaused) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const star = getStarAtPosition(x, y);
+            
+            if (star === null) {
+                completeChain();
+            } else if (canAddToChain(star)) {
+                selectedStars.push(star);
+                star.selected = true;
+                draw();
+            }
+        });
+        
+        canvas.addEventListener('mousemove', function(e) {
+            if (!gameRunning || gamePaused || selectedStars.length === 0) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const star = getStarAtPosition(x, y);
+            if (star && canAddToChain(star)) {
+                canvas.style.cursor = 'pointer';
+            } else {
+                canvas.style.cursor = 'crosshair';
+            }
+        });
+        
+        // 初始化
+        initializeGrid();
+        updateUI();
+        draw();
+    </script>
+</body>
+</html>
