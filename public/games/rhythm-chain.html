@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节奏链 - Rhythm Chain</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #1a1a2e;
+            border: 3px solid #16213e;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game variables
+        const game = {
+            score: 0,
+            combo: 0,
+            level: 1,
+            gameRunning: true,
+            gameOver: false,
+            startTime: Date.now(),
+            duration: 60000 // 60 seconds
+        };
+
+        // Particles for visual effects
+        const particles = [];
+
+        class Note {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 25;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8 - 2;
+                this.life = 1;
+                this.decay = 0.02;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.3; // gravity
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * this.life, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class Orb {
+            constructor() {
+                this.colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
+                this.x = Math.random() * (canvas.width - 60) + 30;
+                this.y = Math.random() * (canvas.height - 60) + 30;
+                this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                this.radius = 30;
+                this.pulseSize = 0;
+                this.targetX = this.x;
+                this.targetY = this.y;
+            }
+
+            update() {
+                // Slight drift movement
+                this.targetX += (Math.random() - 0.5) * 2;
+                this.targetY += (Math.random() - 0.5) * 2;
+                this.targetX = Math.max(this.radius, Math.min(canvas.width - this.radius, this.targetX));
+                this.targetY = Math.max(this.radius, Math.min(canvas.height - this.radius, this.targetY));
+                
+                this.x += (this.targetX - this.x) * 0.05;
+                this.y += (this.targetY - this.y) * 0.05;
+                
+                this.pulseSize = Math.sin(Date.now() * 0.005) * 5;
+            }
+
+            draw() {
+                // Outer glow
+                ctx.fillStyle = this.color + '40';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 20, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Main orb
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + this.pulseSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Shine
+                ctx.fillStyle = '#FFFFFF';
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(this.x - 8, this.y - 8, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            isClicked(mx, my) {
+                const dist = Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2);
+                return dist < this.radius + 15;
+            }
+        }
+
+        // Initialize orbs
+        let orbs = [new Orb(), new Orb(), new Orb(), new Orb(), new Orb()];
+
+        // Mouse interaction
+        canvas.addEventListener('click', (e) => {
+            if (!game.gameRunning || game.gameOver) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            for (let i = 0; i < orbs.length; i++) {
+                if (orbs[i].isClicked(x, y)) {
+                    game.score += (10 + game.combo * 2);
+                    game.combo++;
+                    
+                    // Create particles
+                    for (let j = 0; j < 8; j++) {
+                        particles.push(new Note(orbs[i].x, orbs[i].y, orbs[i].color));
+                    }
+
+                    // Respawn orb
+                    orbs[i] = new Orb();
+                    return;
+                }
+            }
+            game.combo = 0; // Reset combo on miss
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (game.gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Change cursor
+            let onOrb = false;
+            for (let orb of orbs) {
+                if (orb.isClicked(x, y)) {
+                    onOrb = true;
+                    break;
+                }
+            }
+            canvas.style.cursor = onOrb ? 'pointer' : 'default';
+        });
+
+        // Draw functions
+        function drawScore() {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`分数: ${game.score}`, 20, 40);
+            ctx.fillText(`连击: ${game.combo}`, 20, 70);
+            
+            const elapsed = Math.floor((Date.now() - game.startTime) / 1000);
+            const remaining = Math.max(0, Math.floor((game.duration - (Date.now() - game.startTime)) / 1000));
+            ctx.font = 'bold 28px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`⏱ ${remaining}s`, canvas.width / 2, 40);
+        }
+
+        function drawGameOver() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#FFE66D';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2 - 60);
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 32px Arial';
+            ctx.fillText(`最终分数: ${game.score}`, canvas.width / 2, canvas.height / 2 + 20);
+            ctx.fillText(`连击记录: ${game.combo}`, canvas.width / 2, canvas.height / 2 + 70);
+            
+            ctx.font = '18px Arial';
+            ctx.fillText('点击刷新页面重新开始', canvas.width / 2, canvas.height / 2 + 140);
+        }
+
+        // Game loop
+        function gameLoop() {
+            // Clear canvas
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw orbs
+            for (let orb of orbs) {
+                orb.update();
+                orb.draw();
+            }
+
+            // Update and draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life > 0) {
+                    particles[i].draw();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Check game time
+            if (Date.now() - game.startTime >= game.duration) {
+                game.gameRunning = false;
+                game.gameOver = true;
+            }
+
+            // Draw UI
+            drawScore();
+
+            if (game.gameOver) {
+                drawGameOver();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        gameLoop();
+
+        // Prevent context menu
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
