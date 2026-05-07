@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无重力漂流 - Gravity Drift</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #001a4d 0%, #0a0e27 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #00ffff;
+            background: #0a0e27;
+            display: block;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        .info {
+            color: #00ff88;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .score {
+            color: #ffff00;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .controls {
+            color: #00ffff;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border: 3px solid #ff0055;
+            border-radius: 10px;
+            color: #fff;
+            text-align: center;
+            display: none;
+            z-index: 100;
+        }
+        .game-over h2 {
+            color: #ff0055;
+            margin: 0 0 20px 0;
+        }
+        .restart-btn {
+            background: #00ffff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .restart-btn:hover {
+            background: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #00ffff; margin: 0 0 10px 0;">无重力漂流</h1>
+        <div class="info">⭐ 在太空中漂流，收集能量球，避免障碍物</div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="score">得分: <span id="score">0</span> | 生命: <span id="life">3</span></div>
+        <div class="controls">方向键/WASD移动 | 空格加速</div>
+    </div>
+    <div class="game-over" id="gameOverScreen">
+        <h2>游戏结束</h2>
+        <p id="finalScore"></p>
+        <button class="restart-btn" onclick="location.reload()">重新开始</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        const game = {
+            score: 0,
+            life: 3,
+            level: 1,
+            gameOver: false
+        };
+
+        // 玩家对象
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 8,
+            vx: 0,
+            vy: 0,
+            speed: 3,
+            boostSpeed: 5
+        };
+
+        // 能量球数组
+        let energyBalls = [];
+        
+        // 障碍物数组
+        let obstacles = [];
+
+        // 键盘输入
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // 创建能量球
+        function createEnergyBall() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 5,
+                vx: (Math.random() - 0.5) * 1,
+                vy: (Math.random() - 0.5) * 1,
+                pulse: 0
+            };
+        }
+
+        // 创建障碍物
+        function createObstacle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 12,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                rotation: 0,
+                rotationSpeed: (Math.random() - 0.5) * 0.05
+            };
+        }
+
+        // 初始化游戏
+        function initGame() {
+            for (let i = 0; i < 6 + game.level * 2; i++) {
+                energyBalls.push(createEnergyBall());
+            }
+            for (let i = 0; i < 2 + game.level; i++) {
+                obstacles.push(createObstacle());
+            }
+        }
+
+        // 更新玩家位置
+        function updatePlayer() {
+            let moveX = 0, moveY = 0;
+            const boost = keys[' '];
+            const speed = boost ? player.boostSpeed : player.speed;
+
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) moveY -= speed;
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) moveY += speed;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) moveX -= speed;
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) moveX += speed;
+
+            player.vx = moveX;
+            player.vy = moveY;
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // 边界反弹
+            if (player.x - player.radius < 0 || player.x + player.radius > canvas.width) {
+                player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            }
+            if (player.y - player.radius < 0 || player.y + player.radius > canvas.height) {
+                player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            }
+        }
+
+        // 更新能量球
+        function updateEnergyBalls() {
+            for (let i = energyBalls.length - 1; i >= 0; i--) {
+                const ball = energyBalls[i];
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+                ball.pulse += 0.05;
+
+                // 边界反弹
+                if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+                    ball.vx *= -1;
+                }
+                if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                    ball.vy *= -1;
+                }
+
+                // 碰撞检测
+                const dx = ball.x - player.x;
+                const dy = ball.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < ball.radius + player.radius) {
+                    game.score += 10;
+                    energyBalls.splice(i, 1);
+                    if (energyBalls.length === 0) {
+                        game.level++;
+                        initGame();
+                    }
+                }
+            }
+        }
+
+        // 更新障碍物
+        function updateObstacles() {
+            for (let obs of obstacles) {
+                obs.x += obs.vx;
+                obs.y += obs.vy;
+                obs.rotation += obs.rotationSpeed;
+
+                // 边界反弹
+                if (obs.x - obs.radius < 0 || obs.x + obs.radius > canvas.width) {
+                    obs.vx *= -1;
+                }
+                if (obs.y - obs.radius < 0 || obs.y + obs.radius > canvas.height) {
+                    obs.vy *= -1;
+                }
+
+                // 碰撞检测
+                const dx = obs.x - player.x;
+                const dy = obs.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < obs.radius + player.radius) {
+                    game.life--;
+                    if (game.life <= 0) {
+                        game.gameOver = true;
+                    } else {
+                        player.x = canvas.width / 2;
+                        player.y = canvas.height / 2;
+                    }
+                }
+            }
+        }
+
+        // 绘制场景
+        function draw() {
+            // 背景
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 星空效果
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 50; i++) {
+                const x = (game.score + i * 100) % canvas.width;
+                const y = (i * 73) % canvas.height;
+                ctx.fillRect(x, y, 1, 1);
+            }
+
+            // 绘制能量球
+            for (let ball of energyBalls) {
+                const size = ball.radius * (1 + Math.sin(ball.pulse) * 0.3);
+                ctx.fillStyle = '#00ffff';
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // 绘制障碍物
+            for (let obs of obstacles) {
+                ctx.save();
+                ctx.translate(obs.x, obs.y);
+                ctx.rotate(obs.rotation);
+                ctx.fillStyle = '#ff0055';
+                ctx.beginPath();
+                ctx.moveTo(obs.radius, 0);
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3;
+                    const x = Math.cos(angle) * obs.radius;
+                    const y = Math.sin(angle) * obs.radius;
+                    ctx.lineTo(x, y);
+                }
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 绘制玩家
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffff88';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // HUD
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '14px Arial';
+            ctx.fillText(`等级: ${game.level}`, 20, 30);
+
+            // 更新UI
+            document.getElementById('score').textContent = game.score;
+            document.getElementById('life').textContent = game.life;
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            if (game.gameOver) {
+                document.getElementById('gameOverScreen').style.display = 'block';
+                document.getElementById('finalScore').textContent = `最终得分: ${game.score}`;
+                return;
+            }
+
+            updatePlayer();
+            updateEnergyBalls();
+            updateObstacles();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 启动游戏
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量子反应 - Quantum Reaction</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a0033 0%, #330066 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #ff00ff;
+            background: #1a0033;
+            display: block;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);
+            cursor: crosshair;
+        }
+        .info {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .score {
+            color: #ffff00;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .controls {
+            color: #ff00ff;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border: 3px solid #ffff00;
+            border-radius: 10px;
+            color: #fff;
+            text-align: center;
+            display: none;
+            z-index: 100;
+        }
+        .game-over h2 {
+            color: #ffff00;
+            margin: 0 0 20px 0;
+        }
+        .restart-btn {
+            background: #ff00ff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .restart-btn:hover {
+            background: #ff0088;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #ff00ff; margin: 0 0 10px 0;">量子反应</h1>
+        <div class="info">⚛️ 点击匹配的量子对，挑战你的反应速度和观察力</div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="score">得分: <span id="score">0</span> | 连击: <span id="combo">0</span> | 时间: <span id="time">60</span>s</div>
+        <div class="controls">鼠标点击量子对 | 60秒内尽可能多地匹配</div>
+    </div>
+    <div class="game-over" id="gameOverScreen">
+        <h2>时间结束！</h2>
+        <p id="finalScore"></p>
+        <button class="restart-btn" onclick="location.reload()">重新开始</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        const game = {
+            score: 0,
+            combo: 0,
+            timeLeft: 60,
+            gameOver: false,
+            selected: null,
+            matchedPairs: 0
+        };
+
+        // 量子节点
+        class QuantumNode {
+            constructor(x, y, id) {
+                this.x = x;
+                this.y = y;
+                this.id = id;
+                this.radius = 20;
+                this.state = 0;
+                this.pulse = Math.random() * Math.PI * 2;
+                this.matched = false;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // 脉冲光晕
+                const pulse = Math.sin(this.pulse) * 0.3 + 0.7;
+                ctx.fillStyle = `rgba(255, 0, 255, ${pulse * 0.3})`;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 主体
+                if (game.selected === this.id) {
+                    ctx.fillStyle = '#ffff00';
+                } else if (this.matched) {
+                    ctx.fillStyle = '#00ff88';
+                } else {
+                    const colors = ['#ff00ff', '#00ffff', '#ff0088', '#00ff00', '#ffff00'];
+                    ctx.fillStyle = colors[this.id % 5];
+                }
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 边框
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 内部图案
+                ctx.fillStyle = this.matched ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.2)';
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * (0.3 + i * 0.25), 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            update() {
+                this.pulse += 0.02;
+            }
+
+            contains(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                return Math.sqrt(dx * dx + dy * dy) < this.radius;
+            }
+        }
+
+        // 节点网格
+        let nodes = [];
+        const gridSize = 3;
+
+        function initGame() {
+            nodes = [];
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const x = 150 + j * 200;
+                    const y = 150 + i * 150;
+                    nodes.push(new QuantumNode(x, y, i * gridSize + j));
+                }
+            }
+            // 配对节点
+            nodes.forEach((n, i) => n.pairId = Math.floor(i / 2));
+        }
+
+        // 鼠标点击
+        canvas.addEventListener('click', (e) => {
+            if (game.gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            for (let node of nodes) {
+                if (node.contains(x, y) && !node.matched) {
+                    if (game.selected === null) {
+                        game.selected = node.id;
+                    } else if (game.selected === node.id) {
+                        game.selected = null;
+                    } else {
+                        const first = nodes.find(n => n.id === game.selected);
+                        if (first.pairId === node.pairId) {
+                            first.matched = true;
+                            node.matched = true;
+                            game.score += 100 + game.combo * 10;
+                            game.combo++;
+                            game.matchedPairs++;
+                        } else {
+                            game.combo = Math.max(0, game.combo - 1);
+                        }
+                        game.selected = null;
+                    }
+                    break;
+                }
+            }
+        });
+
+        // 更新游戏
+        function update() {
+            nodes.forEach(n => n.update());
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 背景
+            ctx.fillStyle = '#1a0033';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 网格背景
+            ctx.strokeStyle = 'rgba(255,0,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * 120);
+                ctx.lineTo(canvas.width, i * 120);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * 200, 0);
+                ctx.lineTo(i * 200, canvas.height);
+                ctx.stroke();
+            }
+
+            // 绘制节点
+            nodes.forEach(n => n.draw());
+
+            // 标题显示
+            ctx.fillStyle = '#ff00ff';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('量子能场', 20, 30);
+
+            // 更新UI
+            document.getElementById('score').textContent = game.score;
+            document.getElementById('combo').textContent = game.combo;
+            document.getElementById('time').textContent = game.timeLeft;
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            if (game.gameOver) {
+                document.getElementById('gameOverScreen').style.display = 'block';
+                document.getElementById('finalScore').textContent = `最终得分: ${game.score} | 配对数: ${game.matchedPairs}`;
+                return;
+            }
+
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 倒计时
+        setInterval(() => {
+            if (!game.gameOver) {
+                game.timeLeft--;
+                if (game.timeLeft <= 0) {
+                    game.gameOver = true;
+                }
+            }
+        }, 1000);
+
+        // 启动游戏
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>
