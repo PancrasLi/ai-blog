@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔法方块对战</title>
+    <style>
+        body { margin: 0; padding: 10px; background: #1a1a2e; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: Arial, sans-serif; }
+        #gameContainer { position: relative; width: 800px; height: 600px; background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); border: 3px solid #e94560; border-radius: 10px; }
+        canvas { display: block; background: rgba(0,0,0,0.3); border-radius: 8px; }
+        #ui { position: absolute; top: 10px; left: 10px; color: #00d4ff; font-size: 14px; z-index: 10; }
+        #score { font-size: 16px; font-weight: bold; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 30px; border-radius: 15px; text-align: center; color: #00d4ff; z-index: 20; display: none; border: 2px solid #e94560; }
+        #gameOver h2 { color: #00ff00; margin-top: 0; }
+        #gameOver button { padding: 10px 20px; margin-top: 20px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        #gameOver button:hover { background: #ff6b7a; }
+        #instructions { position: absolute; bottom: 10px; left: 10px; color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas"></canvas>
+        <div id="ui">
+            <div id="score">得分: 0</div>
+            <div id="level">关卡: 1</div>
+            <div id="combo">连击: 0</div>
+        </div>
+        <div id="gameOver">
+            <h2>游戏结束!</h2>
+            <p id="finalScore">最终得分: 0</p>
+            <p id="finalLevel">到达关卡: 1</p>
+            <button onclick="location.reload()">重新开始</button>
+        </div>
+        <div id="instructions">鼠标点击消除相邻方块 | 连续消除获得奖励</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+
+        const ROWS = 6, COLS = 5, BLOCK_SIZE = 80;
+        let blocks = [];
+        let score = 0;
+        let level = 1;
+        let combo = 0;
+        let gameRunning = true;
+        let selectedBlock = null;
+
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+
+        // 初始化游戏
+        function init() {
+            blocks = [];
+            for (let r = 0; r < ROWS; r++) {
+                blocks[r] = [];
+                for (let c = 0; c < COLS; c++) {
+                    blocks[r][c] = {
+                        x: c * BLOCK_SIZE + 150,
+                        y: r * BLOCK_SIZE + 60,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        id: Math.random(),
+                        alpha: 1,
+                        scale: 1
+                    };
+                }
+            }
+        }
+
+        // 绘制游戏
+        function draw() {
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制方块
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (blocks[r][c]) {
+                        drawBlock(blocks[r][c], c, r);
+                    }
+                }
+            }
+
+            // 绘制连线指示
+            if (selectedBlock) {
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                let adjBlocks = getAdjacentBlocks(selectedBlock.row, selectedBlock.col);
+                adjBlocks.forEach(adj => {
+                    ctx.beginPath();
+                    ctx.moveTo(selectedBlock.block.x + BLOCK_SIZE/2, selectedBlock.block.y + BLOCK_SIZE/2);
+                    ctx.lineTo(blocks[adj.row][adj.col].x + BLOCK_SIZE/2, blocks[adj.row][adj.col].y + BLOCK_SIZE/2);
+                    ctx.stroke();
+                });
+                ctx.setLineDash([]);
+            }
+        }
+
+        function drawBlock(block, col, row) {
+            ctx.save();
+            ctx.globalAlpha = block.alpha;
+            ctx.translate(block.x + BLOCK_SIZE/2, block.y + BLOCK_SIZE/2);
+            ctx.scale(block.scale, block.scale);
+            
+            // 阴影
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(-BLOCK_SIZE/2 + 3, -BLOCK_SIZE/2 + 3, BLOCK_SIZE - 6, BLOCK_SIZE - 6);
+            
+            // 方块
+            ctx.fillStyle = block.color;
+            ctx.fillRect(-BLOCK_SIZE/2 + 2, -BLOCK_SIZE/2 + 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4);
+            
+            // 边框
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-BLOCK_SIZE/2 + 2, -BLOCK_SIZE/2 + 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4);
+            
+            // 中心装饰
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        function getAdjacentBlocks(row, col) {
+            const adj = [];
+            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+            directions.forEach(([dr, dc]) => {
+                const nr = row + dr, nc = col + dc;
+                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && blocks[nr][nc]) {
+                    adj.push({ row: nr, col: nc });
+                }
+            });
+            return adj;
+        }
+
+        function removeBlock(row, col) {
+            if (!blocks[row][col]) return;
+            
+            const block = blocks[row][col];
+            block.alpha = 0;
+            block.scale = 0.3;
+            
+            setTimeout(() => {
+                blocks[row][col] = null;
+                gravity();
+            }, 200);
+        }
+
+        function gravity() {
+            for (let c = 0; c < COLS; c++) {
+                let writePos = ROWS - 1;
+                for (let r = ROWS - 1; r >= 0; r--) {
+                    if (blocks[r][c]) {
+                        if (r !== writePos) {
+                            blocks[writePos][c] = blocks[r][c];
+                            blocks[r][c] = null;
+                        }
+                        writePos--;
+                    }
+                }
+            }
+            fillEmpty();
+        }
+
+        function fillEmpty() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (!blocks[r][c]) {
+                        blocks[r][c] = {
+                            x: c * BLOCK_SIZE + 150,
+                            y: r * BLOCK_SIZE + 60,
+                            color: colors[Math.floor(Math.random() * colors.length)],
+                            id: Math.random(),
+                            alpha: 1,
+                            scale: 1
+                        };
+                    }
+                }
+            }
+        }
+
+        // 鼠标点击事件
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (blocks[r][c]) {
+                        let block = blocks[r][c];
+                        if (x > block.x && x < block.x + BLOCK_SIZE && y > block.y && y < block.y + BLOCK_SIZE) {
+                            if (selectedBlock && selectedBlock.row === r && selectedBlock.col === c) {
+                                performMatch(r, c);
+                            } else if (selectedBlock && isAdjacent(selectedBlock.row, selectedBlock.col, r, c)) {
+                                performMatch(r, c);
+                            } else {
+                                selectedBlock = { row: r, col: c, block: block };
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            selectedBlock = null;
+        });
+
+        function isAdjacent(r1, c1, r2, c2) {
+            return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+        }
+
+        function performMatch(row, col) {
+            if (!selectedBlock || !blocks[row][col]) return;
+            
+            const sr = selectedBlock.row, sc = selectedBlock.col;
+            const sameColor = blocks[sr][sc].color === blocks[row][col].color;
+            const isAdj = isAdjacent(sr, sc, row, col);
+            
+            if (sameColor || isAdj) {
+                removeBlock(sr, sc);
+                removeBlock(row, col);
+                
+                score += sameColor ? (20 + combo * 5) : 10;
+                combo = sameColor ? combo + 1 : 0;
+                
+                if (combo % 3 === 0) level = Math.min(10, Math.floor(combo / 3) + 1);
+                if (score > 5000 && score < 5100) level++;
+                
+                selectedBlock = null;
+                
+                setTimeout(() => {
+                    if (!canMove()) endGame();
+                }, 500);
+            }
+        }
+
+        function canMove() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (blocks[r][c]) {
+                        getAdjacentBlocks(r, c).forEach(adj => {
+                            if (blocks[adj.row][adj.col].color === blocks[r][c].color) {
+                                return true;
+                            }
+                        });
+                    }
+                }
+            }
+            return score < 500; // 简化逻辑
+        }
+
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('finalScore').textContent = `最终得分: ${score}`;
+            document.getElementById('finalLevel').textContent = `到达关卡: ${level}`;
+        }
+
+        function update() {
+            document.getElementById('score').textContent = `得分: ${score}`;
+            document.getElementById('level').textContent = `关卡: ${level}`;
+            document.getElementById('combo').textContent = `连击: ${combo}`;
+        }
+
+        function animate() {
+            draw();
+            update();
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
