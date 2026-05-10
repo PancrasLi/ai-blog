@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色彩节奏陷阱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; background: #1a1a2e; font-family: '微软雅黑', Arial;
+        }
+        canvas { border: 3px solid #00d4ff; border-radius: 8px; display: block; }
+        .info {
+            position: absolute; top: 20px; left: 20px; color: #00d4ff;
+            font-size: 18px; font-weight: bold;
+        }
+        .score { position: absolute; top: 20px; right: 20px; color: #ffd700; }
+    </style>
+</head>
+<body>
+    <canvas id="game"></canvas>
+    <div class="info">
+        <div id="level">关卡: 1</div>
+        <div id="combo">连击: 0</div>
+    </div>
+    <div class="score">
+        <div id="score">分数: 0</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+
+        const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
+        const ZONES = [
+            { x: 50, y: 480, w: 140, h: 80, color: '#FF6B6B' },
+            { x: 210, y: 480, w: 140, h: 80, color: '#4ECDC4' },
+            { x: 370, y: 480, w: 140, h: 80, color: '#FFE66D' },
+            { x: 530, y: 480, w: 140, h: 80, color: '#95E1D3' },
+            { x: 690, y: 480, w: 100, h: 80, color: '#F38181' }
+        ];
+
+        let gameState = {
+            score: 0,
+            combo: 0,
+            level: 1,
+            gameOver: false,
+            drops: [],
+            activeZones: new Set(),
+            nextDropTime: 0,
+            dropSpeed: 3,
+            spawnRate: 1000,
+            health: 3
+        };
+
+        class DropBlock {
+            constructor(zoneIdx) {
+                const zone = ZONES[zoneIdx];
+                this.x = zone.x + zone.w / 2 - 20;
+                this.y = -40;
+                this.width = 40;
+                this.height = 40;
+                this.color = zone.color;
+                this.zoneIdx = zoneIdx;
+                this.caught = false;
+            }
+            update() {
+                this.y += gameState.dropSpeed;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.shadowBlur = 0;
+            }
+            isInZone() {
+                const zone = ZONES[this.zoneIdx];
+                return this.y + this.height >= zone.y &&
+                       this.x >= zone.x &&
+                       this.x + this.width <= zone.x + zone.w;
+            }
+            isOutOfBounds() {
+                return this.y > canvas.height;
+            }
+        }
+
+        function drawZones() {
+            ZONES.forEach((zone, idx) => {
+                ctx.fillStyle = zone.color;
+                ctx.globalAlpha = gameState.activeZones.has(idx) ? 0.4 : 0.2;
+                ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = zone.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(zone.x, zone.y, zone.w, zone.h);
+                ctx.fillStyle = '#FFF';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(String.fromCharCode(65 + idx), zone.x + zone.w / 2, zone.y + zone.h / 2 + 5);
+            });
+        }
+
+        function drawUI() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, 50);
+            ctx.fillStyle = '#00d4ff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`关卡 ${gameState.level}`, 20, 30);
+            ctx.textAlign = 'center';
+            ctx.fillText(`♥ ${gameState.health}`, canvas.width / 2, 30);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ffd700';
+            ctx.fillText(`分数: ${gameState.score}`, canvas.width - 20, 30);
+            ctx.fillStyle = '#00d4ff';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(`连击: ${gameState.combo}`, canvas.width - 20, 50);
+        }
+
+        function update() {
+            if (gameState.gameOver) return;
+
+            // 生成下落方块
+            if (Date.now() >= gameState.nextDropTime) {
+                const zoneIdx = Math.floor(Math.random() * ZONES.length);
+                gameState.drops.push(new DropBlock(zoneIdx));
+                gameState.nextDropTime = Date.now() + gameState.spawnRate;
+            }
+
+            // 更新方块
+            gameState.drops = gameState.drops.filter(drop => {
+                drop.update();
+                if (drop.isOutOfBounds() && !drop.caught) {
+                    gameState.health--;
+                    gameState.combo = 0;
+                    if (gameState.health <= 0) {
+                        gameState.gameOver = true;
+                    }
+                    return false;
+                }
+                return true;
+            });
+
+            // 更新难度
+            const levelThreshold = gameState.level * 500;
+            if (gameState.score >= levelThreshold) {
+                gameState.level++;
+                gameState.spawnRate = Math.max(400, 1000 - gameState.level * 100);
+                gameState.dropSpeed = 2 + gameState.level * 0.5;
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawZones();
+            gameState.drops.forEach(drop => drop.draw());
+            drawUI();
+
+            if (gameState.gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#FF6B6B';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2 - 40);
+                ctx.font = 'bold 32px Arial';
+                ctx.fillStyle = '#ffd700';
+                ctx.fillText(`最终分数: ${gameState.score}`, canvas.width / 2, canvas.height / 2 + 20);
+                ctx.font = '24px Arial';
+                ctx.fillStyle = '#00d4ff';
+                ctx.fillText('按空格重新开始', canvas.width / 2, canvas.height / 2 + 80);
+            }
+        }
+
+        function catchBlock(zoneIdx) {
+            let caught = false;
+            gameState.drops = gameState.drops.filter(drop => {
+                if (!caught && drop.zoneIdx === zoneIdx && drop.isInZone()) {
+                    gameState.score += 10 * (gameState.combo + 1);
+                    gameState.combo++;
+                    caught = true;
+                    return false;
+                }
+                return true;
+            });
+            if (caught) {
+                gameState.activeZones.add(zoneIdx);
+                setTimeout(() => gameState.activeZones.delete(zoneIdx), 100);
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (gameState.gameOver && e.code === 'Space') {
+                resetGame();
+                e.preventDefault();
+                return;
+            }
+            const keyMap = { KeyA: 0, KeyS: 1, KeyD: 2, KeyF: 3, KeyG: 4 };
+            if (keyMap[e.code] !== undefined) {
+                catchBlock(keyMap[e.code]);
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                score: 0,
+                combo: 0,
+                level: 1,
+                gameOver: false,
+                drops: [],
+                activeZones: new Set(),
+                nextDropTime: 0,
+                dropSpeed: 3,
+                spawnRate: 1000,
+                health: 3
+            };
+        }
+
+        window.addEventListener('keydown', handleKeyPress);
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
