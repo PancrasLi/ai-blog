@@ -17,5 +17,30 @@
       "3. 在微信公众号后台手动审核并发布",
       "4. 或使用微信 API 直接发布"
     ]
+  },
+  {
+    "timestamp": "2026-05-11T07:00:00Z",
+    "article": "2026-05-11-ai-trust-and-localization.mdx",
+    "title": "AI 大模型的信任危机：从文档幻觉到国产化觉醒",
+    "wordCount": 2600,
+    "status": "draft_created",
+    "author": "Claude",
+    "tags": ["AI安全", "大模型", "国产化", "可信任", "技术主权"],
+    "description": "当 DELEGATE-52 基准测试揭露大模型会静默篡改 25% 文档内容时，我们需要重新思考 AI 可信任性的本质。同时，国产大模型的芯片兼容适配突破，正在改写 AI 产业的地缘政治格局。",
+    "mediaId": "pending",
+    "thumbMediaId": "pending",
+    "draftPath": "/tmp/wechat-draft-1778454174927.json",
+    "publishUrl": "https://blog.inig.ai/posts/2026-05-11-ai-trust-and-localization",
+    "contentSources": [
+      "DELEGATE-52 基准测试发现",
+      "DeepSeek V4 国产芯片适配",
+      "Kimi 20亿美元 D 轮融资（估值 200 亿美元）",
+      "AI 医疗应用进展（梅奥诊所）"
+    ],
+    "nextSteps": [
+      "1. 配置 WECHAT_APPSECRET 到 .env.wechat",
+      "2. 再次运行脚本发布到草稿箱",
+      "3. 在微信公众号后台审核发布"
+    ]
   }
 ]
