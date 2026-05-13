@@ -1,0 +1,92 @@
+---
+id: web-reader-skill
+slug: web-reader
+title: Web Article Reader
+title_zh: 网页内容阅读器
+category: 网络工具
+description: Extract and summarize content from any website, article, documentation, GitHub repos, and forum threads with intelligent parsing.
+description_zh: 智能解析并提取任意网页的可读内容，支持文章、技术文档、GitHub 仓库、论坛帖子等，自动摘要与全文提取兼备。
+tags: [web, content-extraction, summarization]
+icon: book
+rating: 4.6
+downloads: 1420
+sourceUrl: https://clawhub.ai/skills/web-reader
+source: clawhub.ai
+lastUpdated: 2026-05-13
+featured: true
+---
+
+# Web Article Reader
+
+## Overview
+
+Web Article Reader Skill 专门用于智能化地从互联网提取和分析文章内容，自动去除页面噪音，保留核心信息。
+
+## Key Features
+
+### 智能内容解析
+- 自动识别文章正文
+- 去除广告和导航元素
+- 保留格式化结构
+- 支持多语言内容
+
+### 支持的内容类型
+- 新闻文章
+- 技术文档
+- GitHub README
+- 论坛讨论
+- 博客文章
+- 学术论文摘要
+
+## 在 Claude Code 中引入
+
+```typescript
+import { WebReader } from 'openclaw-skills/web-reader';
+
+const reader = new WebReader();
+const content = await reader.extract('https://example.com/article');
+const summary = await reader.summarize(content);
+```
+
+## 在 Cursor 中引入
+
+使用快捷命令：
+```
+#read <url>
+```
+
+## 在 OpenClaw 中引入
+
+```yaml
+skills:
+  - name: web-reader
+    enabled: true
+    config:
+      extractMode: markdown
+      includeMetadata: true
+      maxChars: 50000
+```
+
+## 使用场景
+
+### 1. 研究收集
+快速收集多个来源的信息用于对比分析
+
+### 2. 技术学习
+提取关键技术文档内容进行学习
+
+### 3. 内容聚合
+自动收集主题相关的多篇文章
+
+## 性能指标
+
+- 平均解析时间：< 1 秒
+- 准确率：95.5%
+- 支持字符数：> 100,000
+
+## 集成示例
+
+与 Browser Search 的组合使用：
+1. Browser Search 找到相关文章
+2. Web Reader 提取内容
+3. 进行分析处理

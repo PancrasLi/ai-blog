@@ -1,0 +1,73 @@
+---
+id: env-setup
+slug: env-setup
+title: Environment Auto-Setup
+title_zh: 环境自动配置
+category: 系统工具
+description: Auto-detect and install missing tools and dependencies for macOS (Homebrew) and Linux (apt/yum) environments.
+description_zh: 自动检测并安装缺失的工具与依赖，兼容 macOS（Homebrew）和 Linux（apt/yum），让开发环境一键就绪。
+tags: [setup, dependencies, system, automation]
+icon: settings
+rating: 4.2
+downloads: 512
+sourceUrl: https://clawhub.ai/skills/env-setup
+source: clawhub.ai
+lastUpdated: 2026-05-13
+featured: false
+---
+
+# Environment Auto-Setup
+
+## Overview
+
+Environment Auto-Setup Skill 自动化环境配置流程，智能检测和安装所需依赖，节省开发时间。
+
+## Key Features
+
+- 自动依赖检测
+- 跨平台支持
+- 一键安装
+- 配置验证
+
+## 在 Claude Code 中引入
+
+```typescript
+import { EnvSetup } from 'openclaw-skills/env-setup';
+
+const setup = new EnvSetup();
+await setup.detectMissing();
+await setup.installDependencies();
+```
+
+## 在 Cursor 中引入
+
+```
+#setup auto-detect
+#setup install
+```
+
+## 在 OpenClaw 中引入
+
+```yaml
+skills:
+  - name: env-setup
+    enabled: true
+    platforms:
+      - macos
+      - linux
+```
+
+## 支持的工具
+
+- Node.js 和 npm 包管理器
+- Python 和 pip
+- Git
+- Docker
+- 开发工具链
+
+## 工作原理
+
+1. 扫描系统环境
+2. 检测缺失工具
+3. 自动安装依赖
+4. 验证安装成功

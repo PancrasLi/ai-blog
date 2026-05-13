@@ -1,0 +1,103 @@
+---
+id: browser-search-skill
+slug: browser-search
+title: Web Search & Research
+title_zh: 网页搜索与研究
+category: 网络工具
+description: Search the web using Google, Bing, DuckDuckGo, and Baidu without API keys. Perfect for real-time information retrieval.
+description_zh: 无需 API Key，通过 Google、Bing、DuckDuckGo、百度等搜索引擎实时检索网络信息，适用于事实核查、新闻查询、技术文档搜索等场景。
+tags: [search, web, research, real-time]
+icon: search
+rating: 4.9
+downloads: 1850
+sourceUrl: https://clawhub.ai/skills/browser-search
+source: clawhub.ai
+lastUpdated: 2026-05-13
+featured: true
+---
+
+import { SkillCard, Installation, UseCase } from '@/components/skill-components';
+
+# Web Search & Research
+
+## Overview
+
+Browser Search & Research Skill 是 OpenClaw 生态中最强大的信息检索工具，支持多个主流搜索引擎的集成查询，无需配置任何 API 密钥。
+
+## Key Features
+
+### 多引擎支持
+- Google 搜索
+- Bing 搜索
+- DuckDuckGo
+- 百度搜索
+
+### 实时能力
+- 事实核查与验证
+- 新闻追踪
+- 技术文档查询
+- 市场信息收集
+
+## 在 Claude Code 中引入
+
+```typescript
+import { BrowserSearch } from 'openclaw-skills/browser-search';
+
+const search = new BrowserSearch();
+const results = await search.query('AI agent framework 2026');
+console.log(results);
+```
+
+## 在 Cursor 中引入
+
+在 Cursor 的 Skill Manager 中：
+1. 选择 "Skills" 面板
+2. 搜索 "Browser Search"
+3. 点击 "安装"
+4. 在代码中使用快捷提示 `#search` 触发
+
+## 在 OpenClaw 中引入
+
+配置文件中添加：
+```yaml
+skills:
+  - name: browser-search
+    enabled: true
+    config:
+      defaultEngine: google
+      timeout: 30000
+```
+
+## 使用场景
+
+### 1. 实时信息验证
+```
+用户: "请搜索最新的 AI 发展动态"
+Agent: 使用 Browser Search 查询最新新闻和研究
+```
+
+### 2. 技术文档查询
+```
+用户: "查找 Next.js 15 的最新文档"
+Agent: 搜索官方文档和社区教程
+```
+
+### 3. 市场研究
+```
+用户: "对比 OpenClaw 和其他 AI 框架"
+Agent: 收集相关对比数据和用户评价
+```
+
+## 性能指标
+
+- 平均响应时间：< 2 秒
+- 成功率：99.2%
+- 并发支持：100+ 并发查询
+- 缓存机制：智能结果缓存
+
+## 最佳实践
+
+1. 使用具体关键词而非宽泛查询
+2. 为不同搜索引擎选择合适的查询语言
+3. 启用结果缓存以提升性能
+4. 定期更新搜索策略适应引擎变化

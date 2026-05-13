@@ -1,0 +1,73 @@
+---
+id: docx-skill
+slug: docx
+title: Word Document Creator
+title_zh: Word 文档创建与编辑
+category: 文档处理
+description: Comprehensive document creation, editing, and analysis with support for tracked changes, comments, and formatting preservation.
+description_zh: 全面的 Word 文档处理能力，支持新建文档、修订跟踪、批注管理、格式保留，以及内容提取与结构化分析。
+tags: [document, word, editing, formatting]
+icon: file-text
+rating: 4.5
+downloads: 856
+sourceUrl: https://clawhub.ai/skills/docx
+source: clawhub.ai
+lastUpdated: 2026-05-13
+featured: false
+---
+
+# Word Document Creator
+
+## Overview
+
+Word Document Creator Skill 提供完整的 .docx 文档生成和编辑能力，支持专业格式化和版本控制。
+
+## Key Features
+
+### 文档操作
+- 新建文档
+- 编辑现有文档
+- 保留格式化设置
+- 支持表格和图表
+
+### 高级特性
+- 修订跟踪
+- 批注管理
+- 文档模板
+- 内容提取
+
+## 在 Claude Code 中引入
+
+```typescript
+import { WordDocument } from 'openclaw-skills/docx';
+
+const doc = new WordDocument();
+doc.addParagraph('标题', { fontSize: 14, bold: true });
+doc.addParagraph('正文内容');
+await doc.save('document.docx');
+```
+
+## 在 Cursor 中引入
+
+```
+#docx create 文档标题
+#docx edit document.docx
+```
+
+## 在 OpenClaw 中引入
+
+```yaml
+skills:
+  - name: docx
+    enabled: true
+    config:
+      preserveFormatting: true
+      enableTracking: true
+```
+
+## 使用场景
+
+- 报告生成
+- 合同编辑
+- 会议纪要
+- 项目文档

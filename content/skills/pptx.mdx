@@ -1,0 +1,63 @@
+---
+id: pptx-skill
+slug: pptx
+title: Presentation Builder
+title_zh: 演示文稿生成器
+category: 文档处理
+description: Presentation creation, editing, and analysis with support for layouts, speaker notes, and dynamic content generation.
+description_zh: 支持创建、编辑和分析 .pptx 演示文稿，涵盖布局配置、演讲者备注、动态内容生成，以及对已有文件的修改与结构化解析。
+tags: [presentation, powerpoint, slides]
+icon: presentation
+rating: 4.4
+downloads: 723
+sourceUrl: https://clawhub.ai/skills/pptx
+source: clawhub.ai
+lastUpdated: 2026-05-13
+featured: false
+---
+
+# Presentation Builder
+
+## Overview
+
+Presentation Builder Skill 让你能够以编程方式创建和编辑专业的 PowerPoint 演示文稿。
+
+## Key Features
+
+- 幻灯片管理
+- 布局选择
+- 演讲者备注
+- 动态内容插入
+
+## 在 Claude Code 中引入
+
+```typescript
+import { Presentation } from 'openclaw-skills/pptx';
+
+const ppt = new Presentation();
+const slide = ppt.addSlide('Title Slide');
+slide.addTitle('演示标题');
+await ppt.save('presentation.pptx');
+```
+
+## 在 Cursor 中引入
+
+```
+#pptx create 演示主题
+#pptx add-slide
+```
+
+## 在 OpenClaw 中引入
+
+```yaml
+skills:
+  - name: pptx
+    enabled: true
+```
+
+## 应用场景
+
+- 商业演讲
+- 教学课件
+- 项目汇报
+- 产品推介

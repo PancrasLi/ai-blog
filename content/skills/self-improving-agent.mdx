@@ -1,0 +1,65 @@
+---
+id: self-improving-agent
+slug: self-improving-agent
+title: Self-Improving Agent
+title_zh: 自我进化智能体
+category: AI工具
+description: Captures learnings, errors, and corrections to enable continuous improvement through systematic feedback loops.
+description_zh: 持续捕获学习成果、错误记录与用户纠正，通过系统化反馈循环让 Agent 不断自我优化，适合需要长期持续改进的工作流。
+tags: [ai, learning, improvement, agent]
+icon: star
+rating: 4.3
+downloads: 634
+sourceUrl: https://clawhub.ai/skills/self-improving-agent
+source: clawhub.ai
+lastUpdated: 2026-05-13
+featured: false
+---
+
+# Self-Improving Agent
+
+## Overview
+
+Self-Improving Agent Skill 是实现 AI 智能体长期学习和进化的关键，通过持续记录和反馈优化，让 Agent 性能不断提升。
+
+## Key Features
+
+- 错误记录
+- 学习捕获
+- 反馈整合
+- 持续优化
+
+## 在 Claude Code 中引入
+
+```typescript
+import { SelfImprovingAgent } from 'openclaw-skills/self-improving-agent';
+
+const agent = new SelfImprovingAgent();
+agent.recordError('error_key', error);
+agent.recordLearning('learning_key', insight);
+```
+
+## 在 Cursor 中引入
+
+```
+#improve record-error
+#improve record-learning
+```
+
+## 在 OpenClaw 中引入
+
+```yaml
+skills:
+  - name: self-improving-agent
+    enabled: true
+    config:
+      learningMode: active
+      feedbackIntegration: true
+```
+
+## 机制
+
+- 自动记录失败案例
+- 用户纠正反馈捕获
+- 定期分析优化机会
+- 性能基准跟踪
