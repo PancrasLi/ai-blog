@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元素大消除 - Element Merge Blast</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        #gameContainer {
+            position: relative;
+            background: #fff;
+            border: 5px solid #ff6b6b;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+        }
+        .topUI {
+            display: flex;
+            justify-content: space-between;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .scoreInfo { color: #ff6b6b; }
+        .levelInfo { color: #4ecdc4; }
+        .bottomUI {
+            text-align: center;
+            color: #000;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px;
+            border-radius: 5px;
+        }
+        #gameOverPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #fff;
+            display: none;
+            z-index: 100;
+            pointer-events: auto;
+            min-width: 300px;
+        }
+        .panelTitle { font-size: 32px; margin: 10px 0; }
+        .panelText { font-size: 18px; margin: 15px 0; }
+        .restartBtn {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .restartBtn:hover { background: #ff5252; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div class="topUI">
+                <div class="scoreInfo">分数: <span id="score">0</span></div>
+                <div class="levelInfo">关卡: <span id="level">1</span> | 目标: <span id="target">500</span></div>
+            </div>
+            <div class="bottomUI">
+                <div>点击相邻相同颜色方块连接消除 | 组合越多奖励越高！</div>
+            </div>
+        </div>
+        <div id="gameOverPanel">
+            <div class="panelTitle" id="resultTitle">🎉 太棒了！</div>
+            <div class="panelText">分数: <span id="finalScore">0</span></div>
+            <div class="panelText" id="levelUpMsg"></div>
+            <button class="restartBtn" onclick="location.reload()">继续游戏</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const GRID_SIZE = 50;
+        const COLS = Math.floor((canvas.width - 40) / GRID_SIZE);
+        const ROWS = Math.floor((canvas.height - 100) / GRID_SIZE);
+        const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#C7CEEA', '#FF8B94'];
+        
+        let grid = [];
+        let score = 0;
+        let level = 1;
+        let targetScore = 500;
+        let gameActive = true;
+        let selectedBlocks = [];
+        let offsetX = 20, offsetY = 80;
+        
+        function createGrid() {
+            grid = [];
+            for (let i = 0; i < ROWS; i++) {
+                grid[i] = [];
+                for (let j = 0; j < COLS; j++) {
+                    grid[i][j] = {
+                        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                        matched: false,
+                        scale: 1
+                    };
+                }
+            }
+        }
+        
+        function draw() {
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < ROWS; i++) {
+                for (let j = 0; j < COLS; j++) {
+                    const block = grid[i][j];
+                    const x = offsetX + j * GRID_SIZE;
+                    const y = offsetY + i * GRID_SIZE;
+                    
+                    if (!block.matched) {
+                        ctx.save();
+                        ctx.translate(x + GRID_SIZE/2, y + GRID_SIZE/2);
+                        ctx.scale(block.scale, block.scale);
+                        
+                        ctx.fillStyle = block.color;
+                        ctx.fillRect(-GRID_SIZE/2 + 2, -GRID_SIZE/2 + 2, GRID_SIZE - 4, GRID_SIZE - 4);
+                        
+                        if (isSelected(i, j)) {
+                            ctx.strokeStyle = '#000';
+                            ctx.lineWidth = 3;
+                            ctx.strokeRect(-GRID_SIZE/2 + 2, -GRID_SIZE/2 + 2, GRID_SIZE - 4, GRID_SIZE - 4);
+                        }
+                        
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+        
+        function isSelected(i, j) {
+            return selectedBlocks.some(b => b.i === i && b.j === j);
+        }
+        
+        function getAdjacentBlocks(i, j) {
+            const adjacent = [];
+            const dirs = [[0,1], [0,-1], [1,0], [-1,0]];
+            for (let [di, dj] of dirs) {
+                const ni = i + di, nj = j + dj;
+                if (ni >= 0 && ni < ROWS && nj >= 0 && nj < COLS && grid[ni][nj].color === grid[i][j].color) {
+                    adjacent.push({i: ni, j: nj});
+                }
+            }
+            return adjacent;
+        }
+        
+        function selectBlocks(i, j) {
+            selectedBlocks = [];
+            const stack = [{i, j}];
+            const visited = new Set();
+            
+            while (stack.length > 0) {
+                const {i: ci, j: cj} = stack.pop();
+                const key = `${ci},${cj}`;
+                if (visited.has(key)) continue;
+                visited.add(key);
+                
+                selectedBlocks.push({i: ci, j: cj});
+                
+                for (let adj of getAdjacentBlocks(ci, cj)) {
+                    const adjKey = `${adj.i},${adj.j}`;
+                    if (!visited.has(adjKey)) stack.push(adj);
+                }
+            }
+        }
+        
+        function removeMatches() {
+            if (selectedBlocks.length < 2) {
+                selectedBlocks = [];
+                return;
+            }
+            
+            const bonus = Math.pow(selectedBlocks.length, 1.5);
+            score += Math.floor(bonus * 10);
+            
+            for (let {i, j} of selectedBlocks) {
+                grid[i][j].matched = true;
+                grid[i][j].scale = 1;
+            }
+            
+            selectedBlocks = [];
+            dropBlocks();
+            fillGaps();
+        }
+        
+        function dropBlocks() {
+            for (let j = 0; j < COLS; j++) {
+                let writeIdx = ROWS - 1;
+                for (let i = ROWS - 1; i >= 0; i--) {
+                    if (!grid[i][j].matched) {
+                        if (i !== writeIdx) {
+                            grid[writeIdx][j] = grid[i][j];
+                            grid[i][j] = null;
+                        }
+                        writeIdx--;
+                    }
+                }
+            }
+        }
+        
+        function fillGaps() {
+            for (let j = 0; j < COLS; j++) {
+                for (let i = 0; i < ROWS; i++) {
+                    if (grid[i][j] === null || grid[i][j].matched) {
+                        grid[i][j] = {
+                            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                            matched: false,
+                            scale: 1
+                        };
+                    }
+                }
+            }
+        }
+        
+        canvas.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left - offsetX;
+            const y = e.clientY - rect.top - offsetY;
+            
+            const j = Math.floor(x / GRID_SIZE);
+            const i = Math.floor(y / GRID_SIZE);
+            
+            if (i >= 0 && i < ROWS && j >= 0 && j < COLS && !grid[i][j].matched) {
+                selectBlocks(i, j);
+                removeMatches();
+            }
+        });
+        
+        function update() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('target').textContent = targetScore;
+            
+            if (score >= targetScore && gameActive) {
+                gameActive = false;
+                const nextTarget = targetScore + 500 * level;
+                document.getElementById('resultTitle').textContent = `🎊 第${level}关完成！`;
+                document.getElementById('finalScore').textContent = score;
+                document.getElementById('levelUpMsg').textContent = `下一关目标: ${nextTarget} 分`;
+                document.getElementById('gameOverPanel').style.display = 'block';
+                
+                setTimeout(() => {
+                    level++;
+                    targetScore = nextTarget;
+                    gameActive = true;
+                    createGrid();
+                    document.getElementById('gameOverPanel').style.display = 'none';
+                }, 2000);
+            }
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        createGrid();
+        gameLoop();
+    </script>
+</body>
+</html>
