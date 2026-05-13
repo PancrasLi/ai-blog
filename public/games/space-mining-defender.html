@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星际采矿防御战 - Space Mining Defender</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0a0a0a; font-family: Arial, sans-serif; }
+        #gameContainer { position: relative; width: 100%; max-width: 800px; }
+        canvas { display: block; background: linear-gradient(180deg, #001a4d 0%, #000 50%, #1a0a2e 100%); border: 2px solid #00ff88; cursor: none; }
+        #ui { position: absolute; top: 10px; left: 10px; right: 10px; font-size: 14px; color: #00ff88; font-weight: bold; }
+        #score { margin-bottom: 5px; }
+        #level { margin-bottom: 5px; }
+        #health { margin-bottom: 5px; }
+        #upgrade { margin-top: 5px; font-size: 12px; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.9); color: #00ff88; padding: 30px; text-align: center; border: 2px solid #ff0066; border-radius: 10px; display: none; z-index: 100; }
+        #gameOver h1 { font-size: 32px; margin-bottom: 20px; }
+        #gameOver p { font-size: 18px; margin-bottom: 10px; }
+        #gameOver button { background: #00ff88; color: #000; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 20px; border-radius: 5px; }
+        #gameOver button:hover { background: #00dd66; }
+        #controls { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: #666; font-size: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div id="score">得分: 0</div>
+            <div id="level">关卡: 1/5</div>
+            <div id="health">生命: ❤️❤️❤️</div>
+            <div id="upgrade">升级可用</div>
+        </div>
+        <div id="gameOver">
+            <h1 id="endTitle">游戏结束</h1>
+            <p id="endScore">最终得分: 0</p>
+            <p id="endLevel">到达关卡: 1</p>
+            <button onclick="location.reload()">重新开始</button>
+        </div>
+        <div id="controls">🎮 WASD/方向键 移动 | 空格 采集 | E 升级</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        const game = {
+            score: 0, level: 1, health: 3, maxHealth: 3, 
+            gameOver: false, upgradePoints: 0, frameCount: 0
+        };
+
+        // 玩家
+        const player = {
+            x: 400, y: 500, radius: 15, speed: 5, vx: 0, vy: 0,
+            maxSpeed: 5, shield: 0, maxShield: 2, weaponLevel: 1
+        };
+
+        // 数组容器
+        let asteroids = [], enemies = [], minerals = [], particles = [];
+
+        // 类定义
+        class Asteroid { constructor(x, y) { this.x = x; this.y = y; this.radius = 12; this.vx = (Math.random() - 0.5) * 3; this.vy = 2 + Math.random() * 2; } update() { this.x += this.vx; this.y += this.vy; } draw(ctx) { ctx.fillStyle = '#ff6600'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); } }
+
+        class Enemy { constructor(x, y) { this.x = x; this.y = y; this.radius = 10; this.vx = (Math.random() - 0.5) * 2; this.vy = 1 + Math.random(); } update() { this.x += this.vx; this.y += this.vy; } draw(ctx) { ctx.fillStyle = '#ff0066'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); } }
+
+        class Mineral { constructor(x, y) { this.x = x; this.y = y; this.radius = 6; this.vx = (Math.random() - 0.5) * 2; this.vy = 0.5; this.value = Math.random() > 0.7 ? 10 : 5; } update() { this.x += this.vx; this.y += this.vy; } draw(ctx) { ctx.fillStyle = this.value === 10 ? '#ffff00' : '#00ff88'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); } }
+
+        class Particle { constructor(x, y, vx, vy, color, life) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.color = color; this.life = life; this.maxLife = life; } update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life--; } draw(ctx) { ctx.fillStyle = this.color; ctx.globalAlpha = this.life / this.maxLife; ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; } }
+
+        // 游戏逻辑
+        function update() {
+            if (game.gameOver) return;
+
+            // 玩家移动
+            player.x += player.vx;
+            player.y += player.vy;
+            if (player.x - player.radius < 0) player.x = player.radius;
+            if (player.x + player.radius > canvas.width) player.x = canvas.width - player.radius;
+            if (player.y - player.radius < 0) player.y = player.radius;
+            if (player.y + player.radius > canvas.height) player.y = canvas.height - player.radius;
+
+            // 生成流星
+            if (game.frameCount % (80 - game.level * 10) === 0) {
+                asteroids.push(new Asteroid(Math.random() * canvas.width, -20));
+            }
+
+            // 生成敌舰
+            if (game.frameCount % (120 - game.level * 15) === 0) {
+                enemies.push(new Enemy(Math.random() * canvas.width, -20));
+            }
+
+            // 生成矿物
+            if (game.frameCount % 40 === 0) {
+                minerals.push(new Mineral(Math.random() * canvas.width, -10));
+            }
+
+            // 更新对象
+            asteroids.forEach(a => a.update());
+            enemies.forEach(e => e.update());
+            minerals.forEach(m => m.update());
+            particles.forEach(p => p.update());
+
+            // 碰撞检测
+            asteroids = asteroids.filter(a => {
+                const dx = a.x - player.x;
+                const dy = a.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < a.radius + player.radius) {
+                    if (player.shield > 0) {
+                        player.shield--;
+                        for (let i = 0; i < 5; i++) particles.push(new Particle(a.x, a.y, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, '#00ff88', 20));
+                        return false;
+                    } else {
+                        game.health--;
+                        for (let i = 0; i < 8; i++) particles.push(new Particle(a.x, a.y, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, '#ff0066', 30));
+                        return false;
+                    }
+                }
+                return a.y < canvas.height;
+            });
+
+            enemies = enemies.filter(e => {
+                const dx = e.x - player.x;
+                const dy = e.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < e.radius + player.radius) {
+                    game.health--;
+                    for (let i = 0; i < 8; i++) particles.push(new Particle(e.x, e.y, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, '#ff00ff', 30));
+                    return false;
+                }
+                return e.y < canvas.height;
+            });
+
+            minerals = minerals.filter(m => {
+                const dx = m.x - player.x;
+                const dy = m.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < m.radius + player.radius + 20) {
+                    game.score += m.value;
+                    game.upgradePoints++;
+                    for (let i = 0; i < 3; i++) particles.push(new Particle(m.x, m.y, (Math.random() - 0.5) * 3, -Math.random() * 3, m.value === 10 ? '#ffff00' : '#00ff88', 15));
+                    return false;
+                }
+                return m.y < canvas.height;
+            });
+
+            particles = particles.filter(p => p.life > 0);
+
+            // 关卡检查
+            if (game.score >= game.level * 100) {
+                game.level++;
+                if (game.level > 5) game.level = 5;
+            }
+
+            // 生命检查
+            if (game.health <= 0) {
+                game.gameOver = true;
+                document.getElementById('gameOver').style.display = 'block';
+                document.getElementById('endTitle').textContent = '任务失败';
+                document.getElementById('endScore').textContent = '最终得分: ' + game.score;
+                document.getElementById('endLevel').textContent = '到达关卡: ' + game.level;
+            }
+
+            game.frameCount++;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 星空背景
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 50; i++) {
+                const x = (game.frameCount * 0.5 + i * 100) % canvas.width;
+                const y = (i * 12) % canvas.height;
+                ctx.fillRect(x, y, 1, 1);
+            }
+
+            // 绘制对象
+            asteroids.forEach(a => a.draw(ctx));
+            enemies.forEach(e => e.draw(ctx));
+            minerals.forEach(m => m.draw(ctx));
+            particles.forEach(p => p.draw(ctx));
+
+            // 绘制玩家
+            ctx.fillStyle = '#00ff88';
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y - 15);
+            ctx.lineTo(player.x - 10, player.y + 10);
+            ctx.lineTo(player.x + 10, player.y + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // 盾牌
+            if (player.shield > 0) {
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // UI 更新
+            document.getElementById('score').textContent = '得分: ' + game.score;
+            document.getElementById('level').textContent = '关卡: ' + game.level + '/5';
+            document.getElementById('health').textContent = '生命: ' + '❤️'.repeat(Math.max(0, game.health)) + '💔'.repeat(Math.max(0, game.maxHealth - game.health));
+            document.getElementById('upgrade').textContent = '升级点数: ' + game.upgradePoints + (game.upgradePoints > 0 ? ' (E键升级)' : '');
+        }
+
+        // 控制
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === ' ') { player.vy = -2; e.preventDefault(); }
+            if (e.key.toLowerCase() === 'e' && game.upgradePoints > 0) {
+                game.upgradePoints--;
+                if (Math.random() > 0.5) player.maxSpeed = Math.min(7, player.maxSpeed + 0.5);
+                else player.maxShield = Math.min(5, player.maxShield + 1);
+            }
+        });
+        window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+        function updateInput() {
+            player.vx = 0;
+            player.vy = 0;
+            if (keys['w'] || keys['arrowup']) player.vy = -player.maxSpeed;
+            if (keys['s'] || keys['arrowdown']) player.vy = player.maxSpeed;
+            if (keys['a'] || keys['arrowleft']) player.vx = -player.maxSpeed;
+            if (keys['d'] || keys['arrowright']) player.vx = player.maxSpeed;
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            updateInput();
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        // 鼠标追踪（可选）
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            player.x = mouseX;
+            player.y = mouseY;
+        });
+    </script>
+</body>
+</html>
