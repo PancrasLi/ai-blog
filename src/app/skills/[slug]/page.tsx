@@ -5,9 +5,9 @@ import fs from 'fs';
 import path from 'path';
 
 interface SkillDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 function getSkillsData() {
@@ -21,11 +21,12 @@ function getSkillsData() {
   }
 }
 
-export default function SkillDetailPage({
+export default async function SkillDetailPage({
   params,
 }: SkillDetailPageProps) {
+  const { slug } = await params;
   const skillsData = getSkillsData();
-  const skill = skillsData.skills.find((s: any) => s.slug === params.slug);
+  const skill = skillsData.skills.find((s: any) => s.slug === slug);
 
   if (!skill) {
     notFound();
