@@ -1,0 +1,291 @@
+---
+title: "Browser Automation with Playwright"
+slug: "playwright-skill"
+category: "网络工具"
+description: "Model-invoked browser automation skill enabling Claude to autonomously write and execute custom automation scripts for testing and validation."
+tags: ["browser", "automation", "testing", "playwright", "qa"]
+icon: "code"
+rating: 4.7
+downloads: 1900
+sourceUrl: "https://clawhub.ai/skills/playwright-skill"
+source: "clawhub.ai"
+lastUpdated: "2026-05-13"
+featured: true
+---
+
+## 介绍
+
+**playwright-skill** 是一个强大的浏览器自动化 Skill，基于 Playwright 框架，允许 Claude Code 自主编写和执行浏览器自动化脚本。无需手工干预，AI 可直接控制浏览器进行自动化测试、数据抓取和交互验证。
+
+### 核心功能
+- 浏览器自动化脚本编写和执行
+- 跨浏览器测试（Chromium, Firefox, WebKit）
+- 网页元素识别和交互（点击、输入、滚动）
+- 自动化表单填充和提交
+- 网页截图和录屏
+- 性能监控和网络请求拦截
+- 模型自主调用（Model-invoked）
+
+---
+
+## 使用场景
+
+- 自动化网页测试和 QA
+- 数据抓取和爬虫任务
+- 跨浏览器兼容性验证
+- 性能测试和基准测试
+- 自动化表单提交
+- 登录流程自动化
+- 网页截图和监控
+- 无头浏览器脚本
+
+---
+
+## 使用方式
+
+### 在 Claude Code 中引入
+
+Claude Code 是 Claude 的代码执行环境，原生支持 playwright-skill：
+
+1. **安装依赖**
+```bash
+npm install -D @playwright/test
+npm install playwright
+```
+
+2. **在代码中导入和使用**
+```javascript
+// 导入 Playwright
+const { chromium } = require('playwright');
+
+async function testWebsite() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  // 访问网站
+  await page.goto('https://example.com');
+
+  // 点击元素
+  await page.click('button#submit');
+
+  // 获取文本内容
+  const title = await page.title();
+  console.log(`页面标题: ${title}`);
+
+  // 截图
+  await page.screenshot({ path: 'screenshot.png' });
+
+  await browser.close();
+}
+
+testWebsite();
+```
+
+3. **在 Claude Code 编辑器中执行**
+- 复制上述代码到 Claude Code
+- Claude 将自动执行并返回结果
+- 支持交互式调试和错误恢复
+
+---
+
+### 在 Cursor 中引入
+
+Cursor 作为 AI 编辑器集成方式：
+
+1. **打开 Cursor 终端**
+```bash
+npm install -D @playwright/test playwright
+```
+
+2. **创建测试文件** `tests/e2e.spec.ts`
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('登录流程测试', async ({ page }) => {
+  await page.goto('https://example.com/login');
+
+  // 填充表单
+  await page.fill('input[name="email"]', 'user@example.com');
+  await page.fill('input[name="password"]', 'password123');
+
+  // 提交表单
+  await page.click('button[type="submit"]');
+
+  // 验证成功
+  await expect(page).toHaveTitle(/Dashboard/);
+});
+
+test('网页响应性检查', async ({ page }) => {
+  await page.goto('https://example.com');
+
+  // 验证元素可见
+  const button = page.locator('button.main-action');
+  await expect(button).toBeVisible();
+
+  // 点击并验证导航
+  await button.click();
+  await expect(page).toHaveURL(/new-page/);
+});
+```
+
+3. **使用 Cursor AI 生成测试**
+- 按 `Ctrl+K` 输入需求
+- Cursor 会自动生成对应的 Playwright 测试代码
+
+---
+
+### 在 OpenClaw 中引入
+
+OpenClaw 框架集成步骤：
+
+1. **查看已安装的 Skills**
+```bash
+astrahub search playwright
+astrahub list
+```
+
+2. **安装 Playwright Skill**
+```bash
+astrahub install playwright-skill
+```
+
+3. **在 Agent 任务中使用**
+
+编辑配置添加自动化任务：
+
+```markdown
+# 任务：自动化网站测试
+
+目前拥有能力：
+- playwright-skill：浏览器自动化
+
+执行流程：
+1. 访问测试网站
+2. 执行登录流程
+3. 验证页面功能
+4. 生成测试报告
+```
+
+4. **在 Cron 定时任务中使用**
+
+```json
+{
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 */4 * * *",
+    "tz": "Asia/Shanghai"
+  },
+  "payload": {
+    "kind": "agentTurn",
+    "message": "使用 playwright-skill 执行网站可用性检查"
+  }
+}
+```
+
+---
+
+## 完整示例
+
+### 示例 1：自动化登录和数据抓取
+
+```javascript
+const { chromium } = require('playwright');
+
+async function scrapeAfterLogin() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  try {
+    // 导航到登录页
+    await page.goto('https://api.example.com/app');
+
+    // 登录
+    await page.fill('input[name="username"]', 'admin');
+    await page.fill('input[name="password"]', 'securepass');
+    await page.click('button[type="submit"]');
+
+    // 等待页面加载
+    await page.waitForLoadState('networkidle');
+
+    // 抓取数据
+    const data = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('tr')).map(row => ({
+        name: row.querySelector('td:nth-child(1)')?.textContent,
+        status: row.querySelector('td:nth-child(2)')?.textContent,
+      }));
+    });
+
+    console.log('抓取数据:', data);
+
+    // 生成报告
+    await page.screenshot({ path: 'report.png' });
+
+  } finally {
+    await browser.close();
+  }
+}
+
+scrapeAfterLogin();
+```
+
+### 示例 2：性能监控和网络请求拦截
+
+```javascript
+const { chromium } = require('playwright');
+
+async function monitorPerformance() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  // 记录网络请求
+  const requests = [];
+  page.on('request', request => {
+    requests.push({
+      url: request.url(),
+      method: request.method(),
+      timestamp: new Date(),
+    });
+  });
+
+  // 测量性能
+  const startTime = Date.now();
+  await page.goto('https://example.com');
+  const loadTime = Date.now() - startTime;
+
+  console.log(`页面加载时间: ${loadTime}ms`);
+  console.log(`网络请求数: ${requests.length}`);
+
+  await browser.close();
+}
+
+monitorPerformance();
+```
+
+---
+
+## 常见问题
+
+**Q: 支持哪些浏览器？**
+A: 支持 Chromium, Firefox, WebKit，可同时运行多个浏览器实例
+
+**Q: 如何处理动态加载的内容？**
+A: 使用 waitForLoadState() 或 waitForSelector() 等待元素出现
+
+**Q: 可以录制用户行为吗？**
+A: 支持录屏功能，使用 page.video.path() 自动录制浏览器操作
+
+**Q: 如何提高性能？**
+A: 使用无头模式、禁用图片加载、并行执行多个浏览器实例
+
+**Q: 支持 JavaScript 执行吗？**
+A: 完全支持，可直接在浏览器上下文中执行任意 JS 代码
+
+---
+
+## 相关链接
+
+- GitHub: https://github.com/microsoft/playwright
+- 官方文档: https://playwright.dev
+- NPM 包: https://www.npmjs.com/package/playwright
+- ClawHub: https://clawhub.ai/skills/playwright-skill
+- Playwright Inspector: https://playwright.dev/docs/inspector

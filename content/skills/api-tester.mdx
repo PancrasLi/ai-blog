@@ -1,0 +1,352 @@
+---
+title: "API Testing & Debugging"
+slug: "api-tester"
+category: "开发工具"
+description: "Comprehensive API testing and debugging skill for automated API validation, performance testing, and request inspection."
+tags: ["api", "testing", "debugging", "rest", "automation"]
+icon: "code"
+rating: 4.6
+downloads: 1650
+sourceUrl: "https://clawhub.ai/skills/api-tester"
+source: "clawhub.ai"
+lastUpdated: "2026-05-13"
+featured: true
+---
+
+## 介绍
+
+**api-tester** 是一个全面的 API 测试和调试 Skill，专为开发者设计。支持 REST API、GraphQL、WebSocket 等多种协议的自动化测试、性能基准测试和请求拦截分析。
+
+### 核心功能
+- REST API 自动化测试
+- GraphQL 查询和变更测试
+- 请求头和响应头检查
+- 性能基准测试
+- Mock 服务创建
+- 错误处理和超时配置
+- 请求日志和调试
+- CI/CD 集成
+
+---
+
+## 使用场景
+
+- API 端点自动化验证
+- 集成测试和 E2E 测试
+- 性能基准测试
+- 第三方 API 集成验证
+- 回归测试
+- API 文档生成
+- Mock 数据服务
+- 开发流程中的 API 验证
+
+---
+
+## 使用方式
+
+### 在 Claude Code 中引入
+
+Claude Code 原生支持 API 测试工作流：
+
+1. **安装依赖**
+```bash
+npm install axios jest supertest
+```
+
+2. **编写 API 测试**
+```javascript
+// 导入测试工具
+const axios = require('axios');
+
+class APITester {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+  }
+
+  async testGETEndpoint(endpoint, params = {}) {
+    try {
+      const response = await axios.get(`${this.baseUrl}${endpoint}`, {
+        params,
+        timeout: 5000,
+      });
+      return {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+      };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  async testPOSTEndpoint(endpoint, payload) {
+    const response = await axios.post(`${this.baseUrl}${endpoint}`, payload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.data;
+  }
+
+  async testWithAuthentication(endpoint, token) {
+    const response = await axios.get(`${this.baseUrl}${endpoint}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  }
+}
+
+// 使用示例
+const tester = new APITester('https://api.example.com');
+const result = await tester.testGETEndpoint('/users', { page: 1 });
+console.log(result);
+```
+
+3. **在 Claude Code 中执行**
+- 提供 API 地址和测试用例
+- Claude 自动生成测试脚本并执行
+- 获取详细的测试报告
+
+---
+
+### 在 Cursor 中引入
+
+Cursor 中的 API 测试工作流：
+
+1. **项目初始化**
+```bash
+npm init -y
+npm install --save-dev jest supertest axios
+```
+
+2. **创建测试套件** `tests/api.test.ts`
+```typescript
+import axios from 'axios';
+
+describe('API 端点测试', () => {
+  const API_BASE = 'https://jsonplaceholder.typicode.com';
+
+  test('GET /posts 返回成功', async () => {
+    const response = await axios.get(`${API_BASE}/posts/1`);
+    expect(response.status).toBe(200);
+    expect(response.data).toHaveProperty('id');
+    expect(response.data).toHaveProperty('title');
+  });
+
+  test('POST /posts 创建新记录', async () => {
+    const payload = {
+      title: '新文章',
+      body: '测试内容',
+      userId: 1,
+    };
+    const response = await axios.post(`${API_BASE}/posts`, payload);
+    expect(response.status).toBe(201);
+    expect(response.data.title).toBe(payload.title);
+  });
+
+  test('错误处理 - 404 状态码', async () => {
+    try {
+      await axios.get(`${API_BASE}/posts/99999`);
+    } catch (error) {
+      expect(error.response.status).toBe(404);
+    }
+  });
+});
+```
+
+3. **使用 Cursor AI 增强**
+- 按 `Ctrl+K` 要求生成更多测试用例
+- AI 会自动覆盖边界条件和错误场景
+
+---
+
+### 在 OpenClaw 中引入
+
+OpenClaw 中的 API 自动化测试：
+
+1. **安装 Skill**
+```bash
+astrahub install api-tester
+```
+
+2. **配置 API 测试任务**
+
+```markdown
+# 任务：持续 API 健康检查
+
+拥有能力：
+- api-tester：API 自动化测试
+
+执行流程：
+1. 测试所有关键 API 端点
+2. 验证响应时间（<1000ms）
+3. 检查错误率
+4. 生成健康报告
+```
+
+3. **定时 API 检查**
+
+```json
+{
+  "schedule": {
+    "kind": "cron",
+    "expr": "*/15 * * * *",
+    "tz": "Asia/Shanghai"
+  },
+  "payload": {
+    "kind": "agentTurn",
+    "message": "使用 api-tester 执行关键 API 端点检查"
+  }
+}
+```
+
+---
+
+## 完整示例
+
+### 示例 1：完整 API 测试套件
+
+```javascript
+const axios = require('axios');
+
+class ComprehensiveAPITester {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+    this.results = [];
+  }
+
+  async runFullTestSuite() {
+    console.log('开始 API 测试套件...');
+
+    // 测试 1: 基本 GET 请求
+    await this.testBasicGET();
+
+    // 测试 2: 认证
+    await this.testAuthentication();
+
+    // 测试 3: 错误处理
+    await this.testErrorHandling();
+
+    // 测试 4: 性能
+    await this.testPerformance();
+
+    return this.generateReport();
+  }
+
+  async testBasicGET() {
+    const start = Date.now();
+    const response = await axios.get(`${this.baseUrl}/api/data`);
+    const duration = Date.now() - start;
+
+    this.results.push({
+      name: 'Basic GET',
+      status: response.status === 200 ? 'PASS' : 'FAIL',
+      duration: `${duration}ms`,
+    });
+  }
+
+  async testAuthentication() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/api/protected`, {
+        headers: { Authorization: 'Bearer invalid_token' },
+      });
+      this.results.push({ name: 'Auth (invalid)', status: 'FAIL' });
+    } catch (error) {
+      if (error.response.status === 401) {
+        this.results.push({ name: 'Auth Check', status: 'PASS' });
+      }
+    }
+  }
+
+  async testErrorHandling() {
+    try {
+      await axios.get(`${this.baseUrl}/api/nonexistent`);
+    } catch (error) {
+      this.results.push({
+        name: '404 Handling',
+        status: error.response.status === 404 ? 'PASS' : 'FAIL',
+      });
+    }
+  }
+
+  async testPerformance() {
+    const times = [];
+    for (let i = 0; i < 10; i++) {
+      const start = Date.now();
+      await axios.get(`${this.baseUrl}/api/data`);
+      times.push(Date.now() - start);
+    }
+    const avgTime = times.reduce((a, b) => a + b) / times.length;
+    this.results.push({
+      name: 'Performance',
+      avgTime: `${avgTime.toFixed(2)}ms`,
+      status: avgTime < 1000 ? 'PASS' : 'FAIL',
+    });
+  }
+
+  generateReport() {
+    console.table(this.results);
+    return this.results;
+  }
+}
+
+// 执行测试
+const tester = new ComprehensiveAPITester('https://api.example.com');
+await tester.runFullTestSuite();
+```
+
+### 示例 2：GraphQL API 测试
+
+```javascript
+const axios = require('axios');
+
+async function testGraphQLAPI() {
+  const query = `
+    query GetUsers($first: Int!) {
+      users(first: $first) {
+        edges {
+          node {
+            id
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const response = await axios.post('https://api.example.com/graphql', {
+    query,
+    variables: { first: 10 },
+  });
+
+  console.log('GraphQL 响应:', response.data);
+}
+```
+
+---
+
+## 常见问题
+
+**Q: 支持哪些 API 协议？**
+A: 支持 REST、GraphQL、WebSocket 和 SOAP
+
+**Q: 如何处理认证？**
+A: 支持 JWT、OAuth2、API Key 等多种认证方式
+
+**Q: 可以进行性能测试吗？**
+A: 支持基准测试、压力测试和负载测试
+
+**Q: 如何与 CI/CD 集成？**
+A: 支持 GitHub Actions、GitLab CI、Jenkins 等
+
+**Q: 支持 Mock 数据吗？**
+A: 可使用 mock-server 或 json-server 创建 Mock API
+
+---
+
+## 相关链接
+
+- Axios 文档: https://axios-http.com
+- Jest 测试: https://jestjs.io
+- Supertest: https://github.com/visionmedia/supertest
+- ClawHub: https://clawhub.ai/skills/api-tester
+- GraphQL 测试: https://graphql.org/learn/testing/

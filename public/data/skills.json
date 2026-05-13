@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2026-05-13T10:08:00Z",
-  "totalSkills": 8,
+  "lastUpdated": "2026-05-13T02:27:00Z",
+  "totalSkills": 11,
   "skills": [
     {
       "id": "xlsx-skill",
@@ -119,6 +119,51 @@
       "rating": 4.2,
       "downloads": 512,
       "sourceUrl": "https://clawhub.ai/skills/env-setup",
+      "source": "clawhub.ai",
+      "lastUpdated": "2026-05-13",
+      "featured": false
+    },
+    {
+      "id": "playwright-skill",
+      "slug": "playwright-skill",
+      "title": "Browser Automation with Playwright",
+      "category": "网络工具",
+      "description": "Model-invoked browser automation skill enabling Claude to autonomously write and execute custom automation scripts for testing and validation.",
+      "tags": ["browser", "automation", "testing", "playwright", "qa"],
+      "icon": "code",
+      "rating": 4.7,
+      "downloads": 1900,
+      "sourceUrl": "https://clawhub.ai/skills/playwright-skill",
+      "source": "clawhub.ai",
+      "lastUpdated": "2026-05-13",
+      "featured": true
+    },
+    {
+      "id": "api-tester",
+      "slug": "api-tester",
+      "title": "API Testing & Debugging",
+      "category": "开发工具",
+      "description": "Comprehensive API testing and debugging skill for automated API validation, performance testing, and request inspection.",
+      "tags": ["api", "testing", "debugging", "rest", "automation"],
+      "icon": "code",
+      "rating": 4.6,
+      "downloads": 1650,
+      "sourceUrl": "https://clawhub.ai/skills/api-tester",
+      "source": "clawhub.ai",
+      "lastUpdated": "2026-05-13",
+      "featured": true
+    },
+    {
+      "id": "video-clipper",
+      "slug": "video-clipper",
+      "title": "Video Clipping & Editing",
+      "category": "创意工具",
+      "description": "Automated video clipping, editing, and processing skill for creating highlights, extracting segments, and generating video content.",
+      "tags": ["video", "editing", "clips", "multimedia", "automation"],
+      "icon": "film",
+      "rating": 4.5,
+      "downloads": 1420,
+      "sourceUrl": "https://clawhub.ai/skills/video-clipper",
       "source": "clawhub.ai",
       "lastUpdated": "2026-05-13",
       "featured": false

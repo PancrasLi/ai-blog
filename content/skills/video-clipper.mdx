@@ -1,0 +1,362 @@
+---
+title: "Video Clipping & Editing"
+slug: "video-clipper"
+category: "创意工具"
+description: "Automated video clipping, editing, and processing skill for creating highlights, extracting segments, and generating video content."
+tags: ["video", "editing", "clips", "multimedia", "automation"]
+icon: "film"
+rating: 4.5
+downloads: 1420
+sourceUrl: "https://clawhub.ai/skills/video-clipper"
+source: "clawhub.ai"
+lastUpdated: "2026-05-13"
+featured: false
+---
+
+## 介绍
+
+**video-clipper** 是一个功能强大的视频剪辑和编辑 Skill，支持自动化的视频处理流程。可轻松创建视频片段、提取精彩片段、转换格式、添加字幕和效果，适合内容创作者、营销团队和视频制作工作流。
+
+### 核心功能
+- 视频片段提取和裁剪
+- 自动片段生成和高光提取
+- 格式转换（MP4、WebM、MKV 等）
+- 视频压缩和优化
+- 字幕添加和合并
+- 音频提取和替换
+- 转场效果和叠化
+- 批量处理和自动化
+
+---
+
+## 使用场景
+
+- YouTube 视频片段生成
+- 社交媒体内容创作（TikTok、Reels）
+- 直播录制的片段提取
+- 教学视频制作
+- 会议录像处理
+- 电影预告片生成
+- 产品演示视频
+- 内容库管理和归档
+
+---
+
+## 使用方式
+
+### 在 Claude Code 中引入
+
+Claude Code 支持视频处理工作流：
+
+1. **安装依赖**
+```bash
+npm install fluent-ffmpeg sharp
+# 需要 FFmpeg 系统依赖
+```
+
+2. **编写视频处理脚本**
+```javascript
+// 导入视频处理库
+const ffmpeg = require('fluent-ffmpeg');
+const path = require('path');
+
+class VideoClipper {
+  constructor(ffmpegPath = 'ffmpeg') {
+    ffmpeg.setFfmpegPath(ffmpegPath);
+  }
+
+  // 提取视频片段
+  async clipVideo(inputPath, outputPath, startTime, duration) {
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .setStartTime(startTime)
+        .setDuration(duration)
+        .output(outputPath)
+        .on('end', () => {
+          console.log('视频片段创建完成');
+          resolve(outputPath);
+        })
+        .on('error', reject)
+        .run();
+    });
+  }
+
+  // 转换视频格式
+  async convertFormat(inputPath, outputPath, format = 'mp4') {
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .output(outputPath)
+        .outputFormat(format)
+        .on('end', () => resolve(outputPath))
+        .on('error', reject)
+        .run();
+    });
+  }
+
+  // 提取音频
+  async extractAudio(inputPath, outputPath) {
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .noVideo()
+        .audioCodec('libmp3lame')
+        .audioBitrate('192')
+        .output(outputPath)
+        .on('end', () => resolve(outputPath))
+        .on('error', reject)
+        .run();
+    });
+  }
+}
+
+// 使用示例
+const clipper = new VideoClipper();
+await clipper.clipVideo('input.mp4', 'output.mp4', 10, 30); // 从第10秒开始，剪辑30秒
+```
+
+3. **在 Claude Code 中执行**
+- 提供视频文件和处理需求
+- Claude 自动生成脚本并处理
+- 返回处理后的视频
+
+---
+
+### 在 Cursor 中引入
+
+Cursor 中的视频处理集成：
+
+1. **项目配置**
+```bash
+npm install -D fluent-ffmpeg @ffmpeg/ffmpeg @ffmpeg/util
+npm install -D typescript
+```
+
+2. **创建视频处理模块** `src/videoProcessor.ts`
+```typescript
+import * as FFmpeg from '@ffmpeg/ffmpeg';
+
+export class VideoProcessor {
+  private ffmpeg: any;
+
+  async initialize() {
+    const { FFmpeg, fetchFile } = FFmpeg;
+    this.ffmpeg = new FFmpeg.FFmpeg();
+    await this.ffmpeg.load();
+  }
+
+  // 创建视频片段
+  async createClip(
+    videoData: ArrayBuffer,
+    startSeconds: number,
+    durationSeconds: number
+  ): Promise<Blob> {
+    const ff = this.ffmpeg;
+
+    // 写入输入文件
+    ff.FS('writeFile', 'input.mp4', new Uint8Array(videoData));
+
+    // 执行 FFmpeg 命令
+    await ff.run(
+      '-i', 'input.mp4',
+      '-ss', startSeconds.toString(),
+      '-t', durationSeconds.toString(),
+      '-c:v', 'libx264',
+      '-c:a', 'aac',
+      'output.mp4'
+    );
+
+    // 读取输出
+    const data = ff.FS('readFile', 'output.mp4');
+    ff.FS('unlink', 'input.mp4');
+    ff.FS('unlink', 'output.mp4');
+
+    return new Blob([data.buffer], { type: 'video/mp4' });
+  }
+
+  // 添加字幕
+  async addSubtitles(videoData: ArrayBuffer, subtitlePath: string): Promise<Blob> {
+    // 实现字幕合并逻辑
+    // ...
+  }
+}
+```
+
+3. **使用 Cursor AI 生成视频工作流**
+- 按 `Ctrl+K` 描述视频处理需求
+- AI 自动生成对应的视频处理代码
+
+---
+
+### 在 OpenClaw 中引入
+
+OpenClaw 中的视频自动化处理：
+
+1. **安装 Skill**
+```bash
+astrahub install video-clipper
+```
+
+2. **配置视频处理任务**
+
+```markdown
+# 任务：自动生成社交媒体视频片段
+
+拥有能力：
+- video-clipper：视频剪辑和处理
+
+执行流程：
+1. 上传长视频
+2. 自动检测高光片段
+3. 生成 30 秒、60 秒两个版本
+4. 转换为社交媒体格式
+5. 添加字幕和水印
+```
+
+3. **定时视频处理**
+
+```json
+{
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 2 * * *",
+    "tz": "Asia/Shanghai"
+  },
+  "payload": {
+    "kind": "agentTurn",
+    "message": "使用 video-clipper 处理昨天的直播录像并生成社交媒体片段"
+  }
+}
+```
+
+---
+
+## 完整示例
+
+### 示例 1：批量视频转换和优化
+
+```javascript
+const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs');
+const path = require('path');
+
+class VideoBatchProcessor {
+  async processBatch(inputDir, outputDir) {
+    const files = fs.readdirSync(inputDir);
+    const results = [];
+
+    for (const file of files) {
+      if (!file.endsWith('.mov') && !file.endsWith('.avi')) continue;
+
+      const inputPath = path.join(inputDir, file);
+      const outputPath = path.join(
+        outputDir,
+        file.replace(/\.[^.]*$/, '.mp4')
+      );
+
+      try {
+        await this.convertToMP4(inputPath, outputPath);
+        results.push({ file, status: 'SUCCESS' });
+      } catch (error) {
+        results.push({ file, status: 'FAILED', error: error.message });
+      }
+    }
+
+    return results;
+  }
+
+  convertToMP4(inputPath, outputPath) {
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .videoCodec('libx264')
+        .audioCodec('aac')
+        .output(outputPath)
+        .on('end', resolve)
+        .on('error', reject)
+        .run();
+    });
+  }
+}
+
+// 使用
+const processor = new VideoBatchProcessor();
+const results = await processor.processBatch('./videos', './converted');
+console.log('处理结果:', results);
+```
+
+### 示例 2：自动生成高光片段
+
+```javascript
+const ffmpeg = require('fluent-ffmpeg');
+
+class HighlightGenerator {
+  async detectAndExtractHighlights(videoPath, outputDir) {
+    // 分析视频并检测高光
+    const highlights = [
+      { start: 120, duration: 30, title: '精彩片段 1' },
+      { start: 450, duration: 45, title: '精彩片段 2' },
+      { start: 890, duration: 25, title: '精彩片段 3' },
+    ];
+
+    const results = [];
+
+    for (const highlight of highlights) {
+      const outputPath = `${outputDir}/${highlight.title}.mp4`;
+
+      await new Promise((resolve, reject) => {
+        ffmpeg(videoPath)
+          .setStartTime(highlight.start)
+          .setDuration(highlight.duration)
+          .output(outputPath)
+          .on('end', () => {
+            results.push({
+              title: highlight.title,
+              file: outputPath,
+              duration: highlight.duration,
+            });
+            resolve();
+          })
+          .on('error', reject)
+          .run();
+      });
+    }
+
+    return results;
+  }
+}
+
+// 使用
+const generator = new HighlightGenerator();
+const highlights = await generator.detectAndExtractHighlights(
+  'long_video.mp4',
+  './highlights'
+);
+console.log('生成的高光片段:', highlights);
+```
+
+---
+
+## 常见问题
+
+**Q: 支持哪些视频格式？**
+A: 支持 MP4、WebM、MKV、MOV、AVI、FLV 等常见格式
+
+**Q: 可以批量处理视频吗？**
+A: 支持，可编写脚本批量转换、裁剪或优化
+
+**Q: 处理大文件会很慢吗？**
+A: 取决于 FFmpeg 配置，可通过调整编码器速度平衡质量和时间
+
+**Q: 支持添加字幕吗？**
+A: 支持多种字幕格式合并，包括 SRT、VTT、ASS
+
+**Q: 可以压缩视频文件吗？**
+A: 支持多种压缩方案，可调整 bitrate 和分辨率
+
+---
+
+## 相关链接
+
+- FFmpeg 文档: https://ffmpeg.org/documentation.html
+- Fluent-FFmpeg: https://github.com/fluent-ffmpeg/node-fluent-ffmpeg
+- FFmpeg.js (Web): https://github.com/ffmpegwasm/ffmpeg.wasm
+- ClawHub: https://clawhub.ai/skills/video-clipper
+- 视频编解码: https://en.wikipedia.org/wiki/Comparison_of_video_codecs
