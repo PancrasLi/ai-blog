@@ -14,6 +14,7 @@ export function Navbar() {
     { label: '博客', href: '/' },
     { label: '教育', href: '/education' },
     { label: '娱乐', href: '/entertainment' },
+    { label: 'Skills', href: '/skills' },
     { label: '关于', href: 'https://www.inig.ai', external: true },
   ];
 

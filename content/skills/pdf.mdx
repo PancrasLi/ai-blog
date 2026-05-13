@@ -1,0 +1,110 @@
+---
+title: "PDF Manipulation Toolkit"
+slug: "pdf"
+category: "文档处理"
+description: "Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms."
+tags: ["pdf", "document", "extraction", "forms"]
+icon: "file"
+rating: 4.7
+downloads: 980
+sourceUrl: "https://clawhub.ai/skills/pdf"
+source: "clawhub.ai"
+lastUpdated: "2026-05-13"
+featured: true
+---
+
+## 介绍
+
+**pdf** Skill 提供了完整的 PDF 处理能力，支持文本提取、表格识别、文档合并/拆分、表单填充等功能。
+
+### 核心功能
+- 从 PDF 中提取文本和表格
+- 创建新的 PDF 文档
+- 合并和拆分 PDF 文件
+- 填充 PDF 表单
+- 添加水印和注释
+- 管理 PDF 元数据
+
+---
+
+## 使用场景
+
+- 批量处理合同和协议
+- 自动化报告生成
+- 文档扫描识别
+- 表单数据自动填充
+- 多个 PDF 合并为一个文件
+- 从 PDF 中提取结构化数据
+- 创建动态生成的文档
+
+---
+
+## 使用方式
+
+### 在 Claude Code 中引入
+
+```javascript
+import { PDFHandler } from '@/skills/pdf';
+
+// 从 PDF 中提取文本
+const pdfHandler = new PDFHandler();
+const text = await pdfHandler.extractText('document.pdf');
+
+// 创建新 PDF
+await pdfHandler.createPDF('output.pdf', {
+  title: '生成的文档',
+  content: '这是自动生成的 PDF'
+});
+```
+
+### 在 Cursor 中引入
+
+1. 打开 Terminal，安装依赖：
+```bash
+npm install pdfjs-dist pdf-lib
+```
+
+2. 在代码中使用：
+```typescript
+import * as PDFLib from 'pdf-lib';
+
+const pdfDoc = await PDFLib.PDFDocument.create();
+const page = pdfDoc.addPage([595, 842]); // A4 页面
+const pdfBytes = await pdfDoc.save();
+```
+
+### 在 OpenClaw 中引入
+
+```bash
+astrahub install pdf
+astrahub info pdf
+```
+
+在 Agent 任务中：
+```
+你现在拥有 pdf 技能。请完成以下任务：
+1. 从上传的 PDF 文件中提取表格数据
+2. 生成新的 PDF 报告
+3. 返回处理结果
+```
+
+---
+
+## 常见问题
+
+**Q: 支持哪些文件格式？**
+A: 主要支持 PDF 格式，可以处理扫描件和数字化 PDF
+
+**Q: 可以进行 OCR 识别吗？**
+A: 支持基础的文本识别，但对于复杂的手写内容，建议使用 OCR 专门工具
+
+**Q: 如何处理加密的 PDF？**
+A: 需要先解密，然后才能进行处理
+
+---
+
+## 相关链接
+
+- 官方文档: https://pdf-lib.js.org
+- NPM 包: https://www.npmjs.com/package/pdf-lib
+- GitHub: https://github.com/Cartography/pdf-lib

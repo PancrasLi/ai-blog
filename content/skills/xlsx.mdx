@@ -1,0 +1,236 @@
+---
+title: "Excel & Spreadsheet Processing"
+slug: "xlsx"
+category: "文档处理"
+description: "Comprehensive spreadsheet creation, editing, and analysis with support for formulas, formatting, data analysis, and visualization."
+tags: ["spreadsheet", "excel", "data-analysis", "visualization"]
+icon: "table"
+rating: 4.8
+downloads: 1250
+sourceUrl: "https://clawhub.ai/skills/xlsx"
+source: "clawhub.ai"
+lastUpdated: "2026-05-13"
+featured: true
+---
+
+## 介绍
+
+**xlsx** 是一个功能强大的电子表格处理 Skill，支持创建、编辑和分析各种格式的电子表格文件（.xlsx, .xlsm, .csv, .tsv 等）。
+
+### 核心功能
+- 创建新的电子表格，带有公式和格式化
+- 读取和分析现有数据
+- 修改电子表格同时保留公式
+- 数据分析和数据可视化
+- 公式重算和自动化
+
+---
+
+## 使用场景
+
+- 数据导出和报表生成
+- 财务数据分析
+- 学生成绩管理系统
+- 库存跟踪和管理
+- 市场数据分析
+- 自动化数据处理流程
+- 批量数据转换
+
+---
+
+## 使用方式
+
+### 在 Claude Code 中引入
+
+Claude Code 是 Claude 的代码执行环境。要在其中使用 xlsx Skill：
+
+1. **安装依赖**
+```bash
+npm install xlsx openpyxl
+```
+
+2. **在代码中导入和使用**
+```javascript
+// 导入 xlsx 库
+import * as XLSX from 'xlsx';
+
+// 创建新工作簿
+const workbook = XLSX.utils.book_new();
+const worksheet = XLSX.utils.json_to_sheet([
+  { name: "张三", score: 95 },
+  { name: "李四", score: 88 },
+  { name: "王五", score: 92 }
+]);
+
+XLSX.utils.book_append_sheet(workbook, worksheet, "成绩");
+XLSX.writeFile(workbook, "成绩.xlsx");
+```
+
+3. **在 Claude Code 编辑器中执行**
+- 复制上述代码
+- 运行脚本即可生成 Excel 文件
+
+---
+
+### 在 Cursor 中引入
+
+Cursor 是基于 VS Code 的 AI 编辑器。集成方式如下：
+
+1. **打开 Cursor 终端**
+```bash
+# 在项目目录安装依赖
+npm install xlsx
+```
+
+2. **创建新文件** `spreadsheet-handler.ts`
+```typescript
+import * as XLSX from 'xlsx';
+
+export class SpreadsheetHandler {
+  static createReport(data: any[], filename: string) {
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "数据");
+    XLSX.writeFile(workbook, filename);
+  }
+
+  static readExcel(filepath: string) {
+    const workbook = XLSX.readFile(filepath);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(sheet);
+  }
+}
+```
+
+3. **在 Cursor 中使用 AI 助手**
+- 按 `Ctrl+K` 打开 Command Palette
+- 输入 "create spreadsheet" 让 AI 生成代码
+- AI 会自动导入并使用该 Skill
+
+---
+
+### 在 OpenClaw 中引入
+
+OpenClaw 是一个强大的 AI 代理框架。集成步骤：
+
+1. **查看已安装的 Skills**
+```bash
+astrahub list
+# 或
+astrahub search xlsx
+```
+
+2. **安装 xlsx Skill**
+```bash
+astrahub install xlsx
+```
+
+3. **在 Agent 任务中使用**
+
+编辑 `SOUL.md` 或相关任务配置，在 Prompt 中添加：
+
+```markdown
+# 任务：生成每月销售报告
+
+你现在拥有以下能力：
+- xlsx Skill：用于生成和分析电子表格
+
+请执行以下流程：
+1. 从数据源获取销售数据
+2. 使用 xlsx Skill 创建带有图表的报告
+3. 发送给用户
+
+可用的工具函数：
+- spreadsheetHandler.createReport(data, filename)
+- spreadsheetHandler.readExcel(filepath)
+```
+
+4. **在 Cron 定时任务中使用**
+
+在 Gateway 配置中添加：
+
+```json
+{
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 9 * * MON",
+    "tz": "Asia/Shanghai"
+  },
+  "payload": {
+    "kind": "agentTurn",
+    "message": "使用 xlsx Skill 生成周一的销售报告"
+  }
+}
+```
+
+5. **查看 Skill 详细文档**
+```bash
+astrahub info xlsx
+```
+
+---
+
+## 完整示例
+
+### 示例 1：创建成绩表
+
+```javascript
+import * as XLSX from 'xlsx';
+
+const students = [
+  { name: "张三", math: 95, english: 88, science: 92 },
+  { name: "李四", math: 88, english: 91, science: 85 },
+  { name: "王五", math: 92, english: 89, science: 94 }
+];
+
+const workbook = XLSX.utils.book_new();
+const worksheet = XLSX.utils.json_to_sheet(students);
+
+// 设置列宽
+worksheet['!cols'] = [{ wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
+
+XLSX.utils.book_append_sheet(workbook, worksheet, "成绩");
+XLSX.writeFile(workbook, "student_grades.xlsx");
+```
+
+### 示例 2：读取并分析数据
+
+```javascript
+import * as XLSX from 'xlsx';
+
+const workbook = XLSX.readFile("sales_data.xlsx");
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
+const data = XLSX.utils.sheet_to_json(sheet);
+
+// 计算统计信息
+const totalSales = data.reduce((sum, row) => sum + row.amount, 0);
+const averageSales = totalSales / data.length;
+
+console.log(`总销售额: ${totalSales}`);
+console.log(`平均销售额: ${averageSales}`);
+```
+
+---
+
+## 常见问题
+
+**Q: 支持哪些文件格式？**
+A: 支持 .xlsx, .xls, .csv, .tsv, .ods 等常见电子表格格式
+
+**Q: 可以添加图表吗？**
+A: 可以。使用 xlsx 的图表模块或配合 Chart.js 库实现
+
+**Q: 如何处理大数据量？**
+A: 使用 streaming 模式分批处理，避免内存溢出
+
+**Q: 支持公式计算吗？**
+A: 支持读取现有公式，编辑时需重新设置
+
+---
+
+## 相关链接
+
+- GitHub: https://github.com/SheetJS/sheetjs
+- 官方文档: https://docs.sheetjs.com
+- NPM 包: https://www.npmjs.com/package/xlsx
+- ClawHub: https://clawhub.ai/skills/xlsx
